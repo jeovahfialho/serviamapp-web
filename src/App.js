@@ -513,6 +513,7 @@ const Dashboard = () => {
   // ------------------------------------------------------------
   const [profissionaisFiltrados, setProfissionaisFiltrados] = useState([]);
   const [profissionais, setProfissionais] = useState([]);
+  const [mostrarFiltros, setMostrarFiltros] = useState(false); // Este estava faltando
 
   // Estado local que controla todos os filtros
   const [filtros, setFiltros] = useState({
@@ -527,9 +528,9 @@ const Dashboard = () => {
   });
 
   // Arrays com todas as opções únicas para os selects/checkboxes
-  const todasCategorias = ['Médico', 'Psicólogo', 'Terapeuta'];
-  const todasAtuacoes = Array.from(new Set(profissionaisSaude.flatMap(p => p.atuacao)));
-  const todosConvenios = Array.from(new Set(profissionaisSaude.flatMap(p => p.planos)));
+  const todasCategorias = Array.from(new Set(profissionais.map(p => p.tipo)));
+  const todasAtuacoes = Array.from(new Set(profissionais.flatMap(p => p.atuacao)));
+  const todosConvenios = Array.from(new Set(profissionais.flatMap(p => p.planos)));
   const todosTiposAtendimento = [
     { id: 'atendimentoOnline', label: 'Atendimento Online' },
     { id: 'atendimentoEmergencia', label: 'Atendimento de Emergência' },
@@ -543,6 +544,7 @@ const Dashboard = () => {
       try {
         const response = await fetch('https://serviamapp-server.vercel.app/api/profissionais');
         const data = await response.json();
+        console.log('Dados da API:', data); // Adicione este log
         setProfissionais(data);
         setProfissionaisFiltrados(data);
       } catch (error) {
@@ -552,11 +554,11 @@ const Dashboard = () => {
 
     fetchProfissionais();
   }, []);
-  
+
   // useEffect que atualiza a lista de profissionaisFiltrados toda vez que "filtros" muda
   useEffect(() => {
     const filtrarProfissionais = () => {
-      let resultado = profissionaisSaude;
+      let resultado = profissionais;
 
       // 1) Filtro por texto (busca geral)
       if (filtros.busca) {
@@ -988,43 +990,47 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {profissionaisFiltrados.map((profissional) => (
               <div
-                key={profissional.id}
-                className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200"
-              >
-                {/* Card Header */}
-                <div className="flex items-start">
-                  <img
-                    src={profissional.foto}
-                    alt={profissional.nome}
-                    className="w-32 h-32 rounded-full object-cover"
-                  />
-                  <div className="ml-4">
-                    <span className="text-sm text-blue-600 font-medium">
-                      {profissional.tipo}
-                    </span>
-                    <h2 className="text-xl font-semibold">{profissional.nome}</h2>
-                    <p className="text-gray-600">{profissional.especializacao}</p>
-                    <p className="text-sm text-gray-500 mt-1">{profissional.registro}</p>
-                  </div>
+              key={profissional.id}
+              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200"
+            >
+              {/* Card Header */}
+              <div className="flex items-start">
+                <img
+                  src={profissional.foto}
+                  alt={profissional.nome}
+                  className="w-32 h-32 rounded-full object-cover"
+                />
+                <div className="ml-4">
+                  <span className="text-sm text-blue-600 font-medium">
+                    {profissional.tipo}
+                  </span>
+                  <h2 className="text-xl font-semibold">{profissional.nome}</h2>
+                  <p className="text-gray-600">
+                    {Array.isArray(profissional.especializacao) 
+                      ? profissional.especializacao.join(', ') 
+                      : profissional.especializacao}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">{profissional.registro}</p>
                 </div>
-
-                {/* Formação */}
-                <div className="mt-4">
-                  <div className="flex items-center mb-2">
-                    <BookOpen className="text-blue-600 mr-2" size={20} />
-                    <span className="font-medium">Formação</span>
-                  </div>
-                  <div className="ml-8 space-y-1">
-                    <p className="text-sm text-gray-600">
-                      {profissional.formacao.graduacao}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {profissional.formacao.posGraduacao}
-                    </p>
-                  </div>
+              </div>
+            
+              {/* Formação */}
+              <div className="mt-4">
+                <div className="flex items-center mb-2">
+                  <BookOpen className="text-blue-600 mr-2" size={20} />
+                  <span className="font-medium">Formação</span>
                 </div>
-
-                {/* Cursos e Certificações */}
+                <div className="ml-8 space-y-1">
+                  {profissional.graduacao?.map((grad, index) => (
+                    <p key={index} className="text-sm text-gray-600">{grad}</p>
+                  ))}
+                  {profissional.pos_graduacao?.map((pos, index) => (
+                    <p key={index} className="text-sm text-gray-600">{pos}</p>
+                  ))}
+                </div>
+              </div>
+            
+              {/* Cursos e Certificações */}
               <div className="mt-4">
                 <div className="flex items-center mb-2">
                   <Award className="text-blue-600 mr-2" size={20} />
@@ -1032,7 +1038,7 @@ const Dashboard = () => {
                 </div>
                 <div className="ml-8">
                   <ul className="list-disc list-inside space-y-1">
-                    {profissional.formacao.cursos.map((curso, index) => (
+                    {profissional.cursos?.map((curso, index) => (
                       <li key={index} className="text-sm text-gray-600">
                         {curso}
                       </li>
@@ -1040,62 +1046,62 @@ const Dashboard = () => {
                   </ul>
                 </div>
               </div>
-
-                {/* Áreas de Atuação */}
-                <div className="mt-4">
-                  <div className="flex items-center mb-2">
-                    <Award className="text-blue-600 mr-2" size={20} />
-                    <span className="font-medium">Áreas de Atuação:</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {profissional.atuacao.map((area, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-sm"
-                      >
-                        {area}
-                      </span>
-                    ))}
-                  </div>
+            
+              {/* Áreas de Atuação */}
+              <div className="mt-4">
+                <div className="flex items-center mb-2">
+                  <Award className="text-blue-600 mr-2" size={20} />
+                  <span className="font-medium">Áreas de Atuação:</span>
                 </div>
-
-                {/* Convênios (se quiser mostrar) */}
-                <div className="mt-4">
-                  <div className="flex items-center mb-2">
-                    <DollarSign className="text-blue-600 mr-2" size={20} />
-                    <span className="font-medium">Convênios:</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {profissional.planos.map((plano, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-sm"
-                      >
-                        {plano}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Avaliação e Valor */}
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Star className="text-yellow-400 mr-1" size={20} />
-                    <span className="font-medium">{profissional.pontuacao}</span>
-                    <span className="text-gray-500 ml-1">
-                      ({profissional.referencias} avaliações)
+                <div className="flex flex-wrap gap-2">
+                  {profissional.atuacao?.map((area, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-sm"
+                    >
+                      {area}
                     </span>
-                  </div>
-                  <div className="text-xl font-bold text-green-600">
-                    R$ {profissional.valor},00
-                  </div>
+                  ))}
                 </div>
-
-                {/* Exemplo de botão "Ver Detalhes" */}
-                <button className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                  Ver Detalhes
-                </button>
               </div>
+            
+              {/* Convênios */}
+              <div className="mt-4">
+                <div className="flex items-center mb-2">
+                  <DollarSign className="text-blue-600 mr-2" size={20} />
+                  <span className="font-medium">Convênios:</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {profissional.planos?.map((plano, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-sm"
+                    >
+                      {plano}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            
+              {/* Avaliação e Valor */}
+              <div className="mt-4 flex items-center justify-between">
+                <div className="flex items-center">
+                  <Star className="text-yellow-400 mr-1" size={20} />
+                  <span className="font-medium">{profissional.pontuacao}</span>
+                  <span className="text-gray-500 ml-1">
+                    ({profissional.referencias} avaliações)
+                  </span>
+                </div>
+                <div className="text-xl font-bold text-green-600">
+                  R$ {Number(profissional.valor).toFixed(2)}
+                </div>
+              </div>
+            
+              {/* Botão "Ver Detalhes" */}
+              <button className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                Ver Detalhes
+              </button>
+            </div>
             ))}
           </div>
         </main>
