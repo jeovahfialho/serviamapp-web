@@ -4,55 +4,9 @@ import {
   DollarSign, Award 
 } from 'lucide-react';
 
-// Dados mockados para exemplo
-const profissionaisSaude = [
-  {
-    id: 1,
-    tipo: "Psicólogo",
-    nome: "Dra. Maria Silva",
-    foto: "/api/placeholder/150/150",
-    especializacao: "Psicologia Clínica",
-    formacao: {
-      graduacao: "Psicologia - USP",
-      posGraduacao: "Mestrado em Psicologia Clínica - UNIFESP",
-      cursos: [
-        "Especialização em TCC",
-        "Formação em EMDR",
-        "Mindfulness"
-      ]
-    },
-    atuacao: ["Ansiedade", "Depressão", "Terapia Familiar"],
-    valor: 200,
-    pontuacao: 4.8,
-    referencias: 126,
-    planos: ["Particular", "Unimed", "Bradesco Saúde"],
-    registro: "CRP 01/12345",
-    atendimentoOnline: true
-  },
-  {
-    id: 2,
-    tipo: "Médico",
-    nome: "Dr. Carlos Mendes",
-    foto: "/api/placeholder/150/150",
-    especializacao: "Cardiologia",
-    formacao: {
-      graduacao: "Medicina - USP",
-      posGraduacao: "Residência em Cardiologia - InCor",
-      cursos: [
-        "Especialização em Ecocardiografia",
-        "Fellowship em Cardiopatias",
-        "Certificação em Arritmias"
-      ]
-    },
-    atuacao: ["Hipertensão", "Check-up", "Arritmias"],
-    valor: 400,
-    pontuacao: 4.9,
-    referencias: 234,
-    planos: ["Particular", "Amil", "Sul América"],
-    registro: "CRM 54321-SP",
-    atendimentoEmergencia: true
-  }
-];
+const API_URL = process.env.NODE_ENV === 'production'
+  ? 'https://serviamapp-server.vercel.app/api'
+  : 'http://localhost:3001/api';
 
 // Componente do Modal de Cadastro
 const CadastroModal = ({ onClose }) => {
@@ -550,14 +504,15 @@ const CadastroModal = ({ onClose }) => {
 };
 
 const Dashboard = () => {
+
   const [menuAberto, setMenuAberto] = useState(false);
   const [mostrarCadastro, setMostrarCadastro] = useState(false);
 
   // ------------------------------------------------------------
   // ESTADO E LÓGICA DE FILTROS (adaptado do seu segundo código)
   // ------------------------------------------------------------
-  const [mostrarFiltros, setMostrarFiltros] = useState(false);
-  const [profissionaisFiltrados, setProfissionaisFiltrados] = useState(profissionaisSaude);
+  const [profissionaisFiltrados, setProfissionaisFiltrados] = useState([]);
+  const [profissionais, setProfissionais] = useState([]);
 
   // Estado local que controla todos os filtros
   const [filtros, setFiltros] = useState({
@@ -578,9 +533,26 @@ const Dashboard = () => {
   const todosTiposAtendimento = [
     { id: 'atendimentoOnline', label: 'Atendimento Online' },
     { id: 'atendimentoEmergencia', label: 'Atendimento de Emergência' },
-    { id: 'atendeDomicilio', label: 'Atendimento Domiciliar' }
+    { id: 'atendeDomicilio', label: 'Atendimento Presencial' }
   ];
 
+
+  // Efeito para carregar dados da API
+  useEffect(() => {
+    const fetchProfissionais = async () => {
+      try {
+        const response = await fetch('https://serviamapp-server.vercel.app/api/profissionais');
+        const data = await response.json();
+        setProfissionais(data);
+        setProfissionaisFiltrados(data);
+      } catch (error) {
+        console.error('Erro ao buscar profissionais:', error);
+      }
+    };
+
+    fetchProfissionais();
+  }, []);
+  
   // useEffect que atualiza a lista de profissionaisFiltrados toda vez que "filtros" muda
   useEffect(() => {
     const filtrarProfissionais = () => {
