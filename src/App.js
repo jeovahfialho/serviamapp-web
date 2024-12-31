@@ -4,6 +4,14 @@ import {
   DollarSign, Award 
 } from 'lucide-react';
 
+import { NhostClient } from '@nhost/nhost-js';
+
+// Configuração do cliente Nhost
+const nhost = new NhostClient({
+  subdomain: 'serviam-app', // seu subdomínio
+  region: 'sa-east-1'       // sua região
+});
+
 const API_URL = process.env.NODE_ENV === 'production'
   ? 'https://serviamapp-server.vercel.app/api'
   : 'http://localhost:3001/api';
@@ -32,17 +40,38 @@ const CadastroModal = ({ onClose }) => {
   });
 
   // Função para lidar com upload de foto (mantida do primeiro código)
-  const handlePhotoUpload = (event) => {
+  const handlePhotoUpload = async (event) => {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
+      try {
+        console.log('Iniciando upload...'); // para debug
+        
+        // Upload para o Nhost Storage
+        const { error, fileMetadata } = await nhost.storage.upload({
+          file,
+          bucketId: 'default'
+        });
+  
+        if (error) {
+          throw error;
+        }
+  
+        // Pegar a URL pública do arquivo
+        const fileUrl = nhost.storage.getPublicUrl({
+          fileId: fileMetadata.id
+        });
+  
+        console.log('URL da imagem:', fileUrl); // para debug
+  
         setFormData(prev => ({
           ...prev,
-          foto: reader.result
+          foto: fileUrl
         }));
-      };
-      reader.readAsDataURL(file);
+  
+      } catch (error) {
+        console.error('Erro no upload da foto:', error);
+        alert('Erro ao fazer upload da imagem: ' + error.message);
+      }
     }
   };
 
@@ -138,17 +167,17 @@ const CadastroModal = ({ onClose }) => {
                         </button>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center">
+                      <label className="cursor-pointer flex flex-col items-center">
                         <Plus className="mx-auto h-12 w-12 text-gray-400" />
                         <p className="text-gray-600">Clique para fazer upload</p>
-                      </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={handlePhotoUpload}
+                          accept="image/*"
+                        />
+                      </label>
                     )}
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={handlePhotoUpload}
-                      accept="image/*"
-                    />
                   </div>
                 </div>
               </div>
@@ -1247,6 +1276,31 @@ const Dashboard = () => {
                       {plano}
                     </span>
                   ))}
+                </div>
+              </div>
+
+              {/* Tipos de Atendimento - NOVO */}
+              <div className="mt-4">
+                <div className="flex items-center mb-2">
+                  <User className="text-blue-600 mr-2" size={20} />
+                  <span className="font-medium">Tipos de Atendimento:</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {profissional.atendimentoonline && (
+                    <span className="px-2 py-1 bg-green-50 text-green-600 rounded-full text-sm">
+                      Online
+                    </span>
+                  )}
+                  {profissional.atendimentopresencial && (
+                    <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-sm">
+                      Presencial
+                    </span>
+                  )}
+                  {profissional.atendimentoemergencia && (
+                    <span className="px-2 py-1 bg-red-50 text-red-600 rounded-full text-sm">
+                      Emergência
+                    </span>
+                  )}
                 </div>
               </div>
             
