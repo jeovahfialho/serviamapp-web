@@ -8,7 +8,7 @@ import { NhostClient } from '@nhost/nhost-js';
 
 // Configuração do cliente Nhost
 const nhost = new NhostClient({
-  subdomain: 'serviam-app', // seu subdomínio
+  subdomain: 'lihfqplvfnpmjymzwxnx', // seu subdomínio
   region: 'sa-east-1'       // sua região
 });
 
