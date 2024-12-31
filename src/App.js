@@ -14,29 +14,21 @@ const CadastroModal = ({ onClose }) => {
 
   // Estado que armazena os dados do formulário
   const [formData, setFormData] = useState({
-    // Informações Básicas
     tipo: '',
     nome: '',
     foto: null,
     registro: '',
-    especializacao: '',
-
-    // Formação
-    formacao: {
-      graduacao: '',
-      posGraduacao: '',
-      cursos: ['']
-    },
-
-    // Atuação
+    telefone: '',        // Novo campo
+    especializacao: [''],
+    graduacao: [''],
+    pos_graduacao: [''],
+    cursos: [''],
     atuacao: [''],
     valor: '',
     planos: ['Particular'],
-
-    // Atendimento
     atendimentoOnline: false,
     atendimentoEmergencia: false,
-    atendeDomicilio: false
+    atendimentopresencial: false
   });
 
   // Função para lidar com upload de foto (mantida do primeiro código)
@@ -51,6 +43,54 @@ const CadastroModal = ({ onClose }) => {
         }));
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Função de submit - ADICIONE AQUI
+  const handleSubmit = async () => {
+    try {
+      // Remover campos vazios dos arrays
+      const dataToSend = {
+        tipo: formData.tipo,
+        nome: formData.nome,
+        foto: formData.foto,
+        registro: formData.registro,
+        telefone: formData.telefone,
+        especializacao: formData.especializacao.filter(item => item.trim() !== ''),
+        graduacao: formData.graduacao.filter(item => item.trim() !== ''),
+        pos_graduacao: formData.pos_graduacao.filter(item => item.trim() !== ''),
+        cursos: formData.cursos.filter(item => item.trim() !== ''),
+        atuacao: formData.atuacao.filter(item => item.trim() !== ''),
+        valor: formData.valor,
+        planos: formData.planos.filter(item => item.trim() !== ''),
+        atendimentoonline: formData.atendimentoOnline,
+        atendimentoemergencia: formData.atendimentoEmergencia,
+        atendimentopresencial: formData.atendimentopresencial
+      };
+  
+      console.log('Dados a serem enviados:', dataToSend); // Para debug
+  
+      const response = await fetch('https://serviamapp-server.vercel.app/api/profissionais', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToSend)
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Resposta do servidor:', result); // Para debug
+        onClose();
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        console.error('Erro ao cadastrar:', error);
+        alert('Erro ao cadastrar profissional: ' + (error.message || 'Erro desconhecido'));
+      }
+    } catch (error) {
+      console.error('Erro ao enviar dados:', error);
+      alert('Erro ao cadastrar profissional: ' + error.message);
     }
   };
 
@@ -162,22 +202,74 @@ const CadastroModal = ({ onClose }) => {
                 />
               </div>
 
-              {/* Especialização */}
+              {/* Telefone - NOVO CAMPO */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Especialização
+                  Telefone
                 </label>
                 <input
-                  type="text"
-                  value={formData.especializacao}
+                  type="tel"
+                  value={formData.telefone}
                   onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      especializacao: e.target.value
-                    }))
+                    setFormData((prev) => ({ ...prev, telefone: e.target.value }))
                   }
+                  placeholder="(11) 99999-9999"
                   className="w-full rounded-lg border border-gray-300 p-2.5"
                 />
+              </div>
+
+              {/* Especialização - agora múltipla */}
+              <div className="col-span-2">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Especializações
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        especializacao: [...prev.especializacao, '']
+                      }));
+                    }}
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    + Adicionar Especialização
+                  </button>
+                </div>
+                {formData.especializacao.map((esp, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={esp}
+                      onChange={(e) => {
+                        const updatedEsp = [...formData.especializacao];
+                        updatedEsp[index] = e.target.value;
+                        setFormData(prev => ({
+                          ...prev,
+                          especializacao: updatedEsp
+                        }));
+                      }}
+                      className="w-full rounded-lg border border-gray-300 p-2.5"
+                      placeholder="Ex: Cardiologia"
+                    />
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedEsp = formData.especializacao.filter((_, i) => i !== index);
+                          setFormData(prev => ({
+                            ...prev,
+                            especializacao: updatedEsp
+                          }));
+                        }}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X size={20} />
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -189,46 +281,110 @@ const CadastroModal = ({ onClose }) => {
             <div className="space-y-4">
               {/* Graduação */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Graduação
-                </label>
-                <input
-                  type="text"
-                  value={formData.formacao.graduacao}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      formacao: {
-                        ...prev.formacao,
-                        graduacao: e.target.value
-                      }
-                    }))
-                  }
-                  className="w-full rounded-lg border border-gray-300 p-2.5"
-                  placeholder="Ex: Psicologia - USP"
-                />
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Graduação
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        graduacao: [...prev.graduacao, '']
+                      }));
+                    }}
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    + Adicionar Graduação
+                  </button>
+                </div>
+                {formData.graduacao.map((grad, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={grad}
+                      onChange={(e) => {
+                        const updatedGrad = [...formData.graduacao];
+                        updatedGrad[index] = e.target.value;
+                        setFormData(prev => ({
+                          ...prev,
+                          graduacao: updatedGrad
+                        }));
+                      }}
+                      className="w-full rounded-lg border border-gray-300 p-2.5"
+                      placeholder="Ex: Medicina - USP"
+                    />
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedGrad = formData.graduacao.filter((_, i) => i !== index);
+                          setFormData(prev => ({
+                            ...prev,
+                            graduacao: updatedGrad
+                          }));
+                        }}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X size={20} />
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
 
               {/* Pós-Graduação */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Pós-Graduação
-                </label>
-                <input
-                  type="text"
-                  value={formData.formacao.posGraduacao}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      formacao: {
-                        ...prev.formacao,
-                        posGraduacao: e.target.value
-                      }
-                    }))
-                  }
-                  className="w-full rounded-lg border border-gray-300 p-2.5"
-                  placeholder="Ex: Mestrado em Psicologia Clínica"
-                />
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Pós-Graduação
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        pos_graduacao: [...prev.pos_graduacao, '']
+                      }));
+                    }}
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    + Adicionar Pós-Graduação
+                  </button>
+                </div>
+                {formData.pos_graduacao.map((pos, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={pos}
+                      onChange={(e) => {
+                        const updatedPos = [...formData.pos_graduacao];
+                        updatedPos[index] = e.target.value;
+                        setFormData(prev => ({
+                          ...prev,
+                          pos_graduacao: updatedPos
+                        }));
+                      }}
+                      className="w-full rounded-lg border border-gray-300 p-2.5"
+                      placeholder="Ex: Mestrado em Cardiologia"
+                    />
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedPos = formData.pos_graduacao.filter((_, i) => i !== index);
+                          setFormData(prev => ({
+                            ...prev,
+                            pos_graduacao: updatedPos
+                          }));
+                        }}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X size={20} />
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
 
               {/* Cursos */}
@@ -242,10 +398,7 @@ const CadastroModal = ({ onClose }) => {
                     onClick={() => {
                       setFormData((prev) => ({
                         ...prev,
-                        formacao: {
-                          ...prev.formacao,
-                          cursos: [...prev.formacao.cursos, '']
-                        }
+                        cursos: [...prev.cursos, '']
                       }));
                     }}
                     className="text-sm text-blue-600 hover:text-blue-700"
@@ -254,25 +407,38 @@ const CadastroModal = ({ onClose }) => {
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {formData.formacao.cursos.map((curso, index) => (
-                    <input
-                      key={index}
-                      type="text"
-                      value={curso}
-                      onChange={(e) => {
-                        const updatedCursos = [...formData.formacao.cursos];
-                        updatedCursos[index] = e.target.value;
-                        setFormData((prev) => ({
-                          ...prev,
-                          formacao: {
-                            ...prev.formacao,
+                  {formData.cursos.map((curso, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={curso}
+                        onChange={(e) => {
+                          const updatedCursos = [...formData.cursos];
+                          updatedCursos[index] = e.target.value;
+                          setFormData((prev) => ({
+                            ...prev,
                             cursos: updatedCursos
-                          }
-                        }));
-                      }}
-                      className="w-full rounded-lg border border-gray-300 p-2.5"
-                      placeholder="Nome do curso"
-                    />
+                          }));
+                        }}
+                        className="w-full rounded-lg border border-gray-300 p-2.5"
+                        placeholder="Nome do curso"
+                      />
+                      {index > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updatedCursos = formData.cursos.filter((_, i) => i !== index);
+                            setFormData(prev => ({
+                              ...prev,
+                              cursos: updatedCursos
+                            }));
+                          }}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <X size={20} />
+                        </button>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -426,17 +592,17 @@ const CadastroModal = ({ onClose }) => {
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={formData.atendeDomicilio}
+                  checked={formData.atendimentoPresencial}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      atendeDomicilio: e.target.checked
+                      atendimentoPresencial: e.target.checked
                     }))
                   }
                   className="h-4 w-4 text-blue-600 rounded border-gray-300"
                 />
                 <label className="ml-2 block text-sm text-gray-700">
-                  Atendimento Domiciliar
+                  Atendimento Presencial
                 </label>
               </div>
             </div>
@@ -448,14 +614,15 @@ const CadastroModal = ({ onClose }) => {
   };
 
   return (
+    // No componente CadastroModal, ajuste a div principal
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto"> {/* Reduzido de 3xl para 2xl e 90vh para 80vh */}
         {/* Cabeçalho do Modal */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200"> {/* Reduzido padding de 6 para 4 */}
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Cadastrar Profissional</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
-              <X size={24} className="text-gray-500" />
+            <h2 className="text-xl font-bold">Cadastrar Profissional</h2> {/* Reduzido de 2xl para xl */}
+            <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full"> {/* Reduzido padding */}
+              <X size={20} className="text-gray-500" /> {/* Reduzido tamanho do ícone */}
             </button>
           </div>
 
@@ -492,7 +659,7 @@ const CadastroModal = ({ onClose }) => {
             Voltar
           </button>
           <button
-            onClick={step === steps.length ? onClose : nextStep}
+            onClick={step === steps.length ? handleSubmit : nextStep}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             {step === steps.length ? 'Concluir' : 'Próximo'}
