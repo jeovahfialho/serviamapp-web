@@ -39,7 +39,7 @@ const CadastroModal = ({ onClose }) => {
     planos: ['Particular'],
     atendimentoOnline: false,
     atendimentoEmergencia: false,
-    atendimentopresencial: false
+    atendimentoPresencial: false
   });
 
 
@@ -168,7 +168,7 @@ const CadastroModal = ({ onClose }) => {
         planos: formData.planos.filter(item => item.trim() !== ''),
         atendimentoonline: formData.atendimentoOnline,
         atendimentoemergencia: formData.atendimentoEmergencia,
-        atendimentopresencial: formData.atendimentopresencial
+        atendimentopresencial: formData.atendimentoPresencial
       };
   
       console.log('Dados a serem enviados:', dataToSend); // Para debug
@@ -272,6 +272,13 @@ const CadastroModal = ({ onClose }) => {
                   <option value="Médico">Médico</option>
                   <option value="Psicólogo">Psicólogo</option>
                   <option value="Terapeuta">Terapeuta</option>
+                  <option value="Nutricionista">Nutricionista</option>
+                  <option value="Fisioterapeuta">Fisioterapeuta</option>
+                  <option value="Pedagogo">Pedagogo</option>
+                  <option value="Educador Físico">Educador Físico</option>
+                  <option value="Consultor">Consultor</option>
+                  <option value="Assessor">Assessor</option>
+                  <option value="Especialista">Especialista</option>
                 </select>
               </div>
 
