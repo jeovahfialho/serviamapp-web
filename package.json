@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@nhost/nhost-js": "^3.2.1",
+    "@vercel/speed-insights": "^1.1.0",
     "cra-template": "1.2.0",
     "lucide-react": "^0.469.0",
     "react": "^19.0.0",

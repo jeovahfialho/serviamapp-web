@@ -4,16 +4,11 @@ import {
   DollarSign, Award 
 } from 'lucide-react';
 
-import { NhostClient } from '@nhost/nhost-js';
-import logo from './img/logo.png';
 import ServianLogoText from './components/ServianLogoText';
+import { SpeedInsights } from "@vercel/speed-insights/react"
+import PhoneDisplay from './components/PhoneDisplay';
 
-// Configuração do cliente Nhost
-const nhost = new NhostClient({
-  subdomain: 'lihfqplvfnpmjymzwxnx', // seu subdomínio
-  region: 'sa-east-1'       // sua região
-});
-
+<SpeedInsights/>
 
 const API_URL = process.env.NODE_ENV === 'production'
   ? 'https://serviamapp-server.vercel.app/api'
@@ -22,6 +17,8 @@ const API_URL = process.env.NODE_ENV === 'production'
 // Componente do Modal de Cadastro
 const CadastroModal = ({ onClose }) => {
   const [step, setStep] = useState(1);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Estado que armazena os dados do formulário
   const [formData, setFormData] = useState({
@@ -151,6 +148,8 @@ const CadastroModal = ({ onClose }) => {
 
   // Função de submit - ADICIONE AQUI
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       // Remover campos vazios dos arrays
       const dataToSend = {
@@ -182,10 +181,11 @@ const CadastroModal = ({ onClose }) => {
       });
   
       if (response.ok) {
-        const result = await response.json();
-        console.log('Resposta do servidor:', result); // Para debug
-        onClose();
-        window.location.reload();
+        setIsSuccess(true);
+        setTimeout(() => {
+          onClose();
+          window.location.reload();
+        }, 3000);
       } else {
         const error = await response.json();
         console.error('Erro ao cadastrar:', error);
@@ -207,6 +207,25 @@ const CadastroModal = ({ onClose }) => {
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, steps.length));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
+
+  // Tela de sucesso
+  if (isSuccess) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg w-full max-w-md p-6 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Cadastro Realizado!</h2>
+          <p className="text-gray-600 mb-6">O profissional foi cadastrado com sucesso.</p>
+          <p className="text-sm text-gray-500">Esta janela será fechada automaticamente...</p>
+        </div>
+      </div>
+    );
+  }
+
 
   // Renderização dos formulários de cada step
   const renderStepContent = () => {
@@ -770,9 +789,30 @@ const CadastroModal = ({ onClose }) => {
           </button>
           <button
             onClick={step === steps.length ? handleSubmit : nextStep}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            disabled={isSubmitting}
+            className={`px-4 py-2 rounded-lg text-white flex items-center justify-center gap-2 transition-colors ${
+              isSubmitting 
+                ? 'bg-gray-400 cursor-not-allowed opacity-70' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
-            {step === steps.length ? 'Concluir' : 'Próximo'}
+            {step === steps.length ? (
+              <>
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processando...
+                  </>
+                ) : (
+                  'Concluir'
+                )}
+              </>
+            ) : (
+              'Próximo'
+            )}
           </button>
         </div>
       </div>
@@ -981,7 +1021,7 @@ const Dashboard = () => {
         <main className="flex-1 p-4 md:p-8">
           {/* Cabeçalho da Seção */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">Profissionais da Saúde</h1>
+          <h1 className="text-2xl font-bold">Profissionais</h1>
           <div className="flex items-center gap-4">
             <button
               onClick={() => setMostrarFiltros(!mostrarFiltros)}
@@ -1330,9 +1370,9 @@ const Dashboard = () => {
             </div>
           
             {/* Botão "Ver Detalhes" */}
-            <button className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
-              Ver Detalhes
-            </button>
+            <div className="mt-4">
+              <PhoneDisplay telefone={profissional.telefone} />
+            </div>
           </div>
           ))}
         </div>
