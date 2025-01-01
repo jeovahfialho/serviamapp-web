@@ -36,7 +36,8 @@ const CadastroModal = ({ onClose }) => {
     planos: ['Particular'],
     atendimentoOnline: false,
     atendimentoEmergencia: false,
-    atendimentoPresencial: false
+    atendimentoPresencial: false,
+    status: 'pending'
   });
 
 
@@ -167,7 +168,8 @@ const CadastroModal = ({ onClose }) => {
         planos: formData.planos.filter(item => item.trim() !== ''),
         atendimentoonline: formData.atendimentoOnline,
         atendimentoemergencia: formData.atendimentoEmergencia,
-        atendimentopresencial: formData.atendimentoPresencial
+        atendimentopresencial: formData.atendimentoPresencial,
+        status: 'pending'
       };
   
       console.log('Dados a serem enviados:', dataToSend); // Para debug
