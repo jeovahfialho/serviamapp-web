@@ -5,12 +5,15 @@ import {
 } from 'lucide-react';
 
 import { NhostClient } from '@nhost/nhost-js';
+import logo from './img/logo.png';
+import ServianLogoText from './components/ServianLogoText';
 
 // Configuração do cliente Nhost
 const nhost = new NhostClient({
   subdomain: 'lihfqplvfnpmjymzwxnx', // seu subdomínio
   region: 'sa-east-1'       // sua região
 });
+
 
 const API_URL = process.env.NODE_ENV === 'production'
   ? 'https://serviamapp-server.vercel.app/api'
@@ -39,39 +42,110 @@ const CadastroModal = ({ onClose }) => {
     atendimentopresencial: false
   });
 
+
+  const [isUploading, setIsUploading] = useState(false);
+
   // Função para lidar com upload de foto (mantida do primeiro código)
   const handlePhotoUpload = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      try {
-        console.log('Iniciando upload...'); // para debug
-        
-        // Upload para o Nhost Storage
-        const { error, fileMetadata } = await nhost.storage.upload({
-          file,
-          bucketId: 'default'
-        });
+    
+    // Validações iniciais
+    if (!file) {
+      alert('Nenhum arquivo selecionado');
+      return;
+    }
   
-        if (error) {
-          throw error;
+    // Validar tipo de arquivo
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Tipo de arquivo não suportado. Escolha uma imagem JPG, PNG ou GIF.');
+      return;
+    }
+  
+    // Validar tamanho do arquivo (limite de 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      alert('O arquivo é muito grande. Limite máximo é de 5MB.');
+      return;
+    }
+  
+    // Preparar upload
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'ml_default');
+    
+    try {
+      // Mostrar indicador de carregamento
+      setIsUploading(true);
+  
+      console.log('Iniciando upload para Cloudinary'); // Log de início
+  
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/dvdpqiukz/image/upload`, 
+        {
+          method: 'POST',
+          body: formData
         }
+      );
   
-        // Pegar a URL pública do arquivo
-        const fileUrl = nhost.storage.getPublicUrl({
-          fileId: fileMetadata.id
-        });
+      // Log da resposta completa
+      const responseText = await response.text();
+      console.log('Resposta completa do Cloudinary:', responseText);
   
-        console.log('URL da imagem:', fileUrl); // para debug
-  
-        setFormData(prev => ({
-          ...prev,
-          foto: fileUrl
-        }));
-  
-      } catch (error) {
-        console.error('Erro no upload da foto:', error);
-        alert('Erro ao fazer upload da imagem: ' + error.message);
+      // Tentar parsear o JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Erro ao parsear resposta JSON:', parseError);
+        throw new Error('Resposta inválida do servidor');
       }
+  
+      // Verificar resposta do servidor
+      if (!response.ok) {
+        throw new Error(
+          data.error?.message || 
+          `Erro no upload: ${response.status} ${response.statusText}`
+        );
+      }
+      
+      // Validar URL retornada
+      if (!data.secure_url) {
+        throw new Error('Nenhuma URL de imagem foi gerada');
+      }
+  
+      // Sucesso no upload
+      const imageUrl = data.secure_url;
+      setFormData(prev => ({
+        ...prev,
+        foto: imageUrl
+      }));
+  
+      // Mostrar mensagem de sucesso
+      alert('Imagem enviada com sucesso!');
+  
+    } catch (error) {
+      // Tratamento de erros detalhado
+      console.error('Erro completo no upload:', error);
+  
+      // Tentar extrair detalhes do erro
+      let mensagemErro = 'Não foi possível fazer upload da imagem.';
+      
+      if (error.message) {
+        console.log('Mensagem de erro específica:', error.message);
+        
+        if (error.message.includes('network')) {
+          mensagemErro = 'Erro de conexão. Verifique sua internet.';
+        } else if (error.message.includes('authorization')) {
+          mensagemErro = 'Falha na autorização. Verifique suas credenciais.';
+        }
+      }
+  
+      alert(mensagemErro);
+  
+    } finally {
+      // Esconder indicador de carregamento
+      setIsUploading(false);
     }
   };
 
@@ -730,7 +804,7 @@ const Dashboard = () => {
   const todosTiposAtendimento = [
     { id: 'atendimentoOnline', label: 'Atendimento Online' },
     { id: 'atendimentoEmergencia', label: 'Atendimento de Emergência' },
-    { id: 'atendeDomicilio', label: 'Atendimento Presencial' }
+    { id: 'atendimentoPresencial', label: 'Atendimento Presencial' }
   ];
 
 
@@ -831,137 +905,54 @@ const Dashboard = () => {
   // ------------------------------------------------------------
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Header */}
-      <nav className="bg-white shadow-md">
-        <div className="max-w-full px-4">
-          <div className="flex justify-between h-16">
-            {/* Botão de menu + Logo */}
+    <div className="min-h-screen bg-gray-100">
+      {/* Header Fixo */}
+      <nav className="fixed top-0 left-0 right-0 bg-[#273440] shadow-md z-40 h-16">
+        <div className="max-w-full px-4 h-full">
+          <div className="flex justify-between items-center h-full">
+            {/* Lado Esquerdo - Logo */}
             <div className="flex items-center">
               <button
-                onClick={() => setMenuAberto(true)}
-                className="p-2 rounded-md text-gray-600 hover:text-gray-900 md:hidden"
+                onClick={() => setMenuAberto(!menuAberto)}
+                className="p-2 rounded-md text-white hover:bg-[#3a4b5b] md:hidden"
               >
                 <Menu size={24} />
               </button>
-              <div className="ml-4 font-bold text-xl">Admin Dashboard</div>
+              <ServianLogoText />
             </div>
-            {/* Barra de busca + ícones do lado direito */}
-            <div className="flex items-center space-x-6 pr-4">
-              {/* Busca */}
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Buscar..."
-                  value={filtros.busca}
-                  onChange={(e) =>
-                    setFiltros(prev => ({ ...prev, busca: e.target.value }))
-                  }
-                  className="w-64 px-4 py-2 pl-10 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
+  
+            {/* Lado Direito - Avatar */}
+            <div className="flex items-center space-x-3">
+              <div className="w-8 md:w-10 h-8 md:h-10 rounded-full bg-[#3a4b5b] flex items-center justify-center">
+                <User size={20} className="text-white" />
               </div>
-              {/* Ícones */}
-              <button className="p-2 rounded-full hover:bg-gray-100 relative">
-                <BookOpen size={22} className="text-gray-600" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
-                  3
-                </span>
-              </button>
-              <button className="p-2 rounded-full hover:bg-gray-100">
-                <Heart size={22} className="text-gray-600" />
-              </button>
-              <div className="h-6 w-px bg-gray-200"></div>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <User size={24} className="text-blue-600" />
-                </div>
-                <div className="text-sm">
-                  <p className="font-medium text-gray-700">Admin</p>
-                  <p className="text-gray-500">admin@exemplo.com</p>
-                </div>
+              <div className="hidden md:block text-sm">
+                <p className="font-medium text-white">Admin</p>
+                <p className="text-gray-300">admin@exemplo.com</p>
               </div>
             </div>
           </div>
         </div>
       </nav>
-
-      {/* Conteúdo principal com flex-1 */}
-      <div className="flex flex-1">
+  
+      {/* Container Principal - Com padding-top para compensar o header fixo */}
+      <div className="flex pt-16 min-h-[calc(100vh-4rem)]">
         {/* Sidebar */}
         <aside
-          className={`fixed md:relative w-64 h-screen bg-white top-0 left-0 transform transition-all duration-300 ease-in-out ${
+          className={`fixed md:relative w-64 min-h-screen bg-white shadow-lg z-30 transition-transform duration-300 ${
             menuAberto ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-          } z-30`}
+          }`}
         >
           <div className="flex flex-col h-full">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <img
-                src="/api/placeholder/120/40"
-                alt="Logo"
-                className="mx-auto md:mx-0"
-              />
-              <button
-                onClick={() => setMenuAberto(false)}
-                className="md:hidden p-2 rounded-lg hover:bg-gray-100"
-              >
-                <X size={24} className="text-gray-500" />
-              </button>
-            </div>
-            <nav className="flex-1 p-4">
-              <div className="mb-4">
-                <div className="px-4 py-2 text-sm font-medium text-gray-600">
-                  Área da Saúde
-                </div>
-                {/* Exemplo: se quiser filtrar só clicando aqui */}
-                <a
-                  href="#"
-                  onClick={() =>
-                    setFiltros(prev => ({
-                      ...prev,
-                      categoria: prev.categoria.includes('Médico')
-                        ? prev.categoria // se já tiver "Médico", não mexe
-                        : [...prev.categoria, 'Médico']
-                    }))
-                  }
-                  className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
-                >
-                  Médicos
-                </a>
-                <a
-                  href="#"
-                  onClick={() =>
-                    setFiltros(prev => ({
-                      ...prev,
-                      categoria: prev.categoria.includes('Psicólogo')
-                        ? prev.categoria
-                        : [...prev.categoria, 'Psicólogo']
-                    }))
-                  }
-                  className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
-                >
-                  Psicólogos
-                </a>
-                <a
-                  href="#"
-                  onClick={() =>
-                    setFiltros(prev => ({
-                      ...prev,
-                      categoria: prev.categoria.includes('Terapeuta')
-                        ? prev.categoria
-                        : [...prev.categoria, 'Terapeuta']
-                    }))
-                  }
-                  className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
-                >
-                  Terapeutas
-                </a>
-              </div>
-              <div className="mt-6">
-                {/* Botão que abre o modal de cadastro */}
+            {/* Removida a div da logo */}
+            <nav className="flex-1 p-4 bg-white">
+              <div className="mt-2">
                 <button
-                  onClick={() => setMostrarCadastro(true)}
-                  className="w-full px-4 py-2 flex items-center gap-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg"
+                  onClick={() => {
+                    setMostrarCadastro(true);
+                    setMenuAberto(false);
+                  }}
+                  className="w-full px-4 py-3 flex items-center gap-2 text-sm font-medium text-[#273440] hover:bg-gray-50 rounded-lg border border-[#273440] transition-colors"
                 >
                   <Plus size={20} />
                   Cadastrar Profissional
@@ -970,380 +961,394 @@ const Dashboard = () => {
             </nav>
           </div>
         </aside>
-
-        {/* Overlay para fechar menu em mobile */}
+  
+        {/* Overlay para mobile */}
         {menuAberto && (
           <div
             className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
             onClick={() => setMenuAberto(false)}
           />
         )}
+  
+        {/* Main Content - Será o container para o resto do conteúdo */}
+        <main className="flex-1 p-4 md:p-8">
+          {/* Cabeçalho da Seção */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold">Profissionais da Saúde</h1>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setMostrarFiltros(!mostrarFiltros)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            >
+              <Filter size={20} />
+              Filtros
+            </button>
+          </div>
+        </div>
 
-        {/* Main Content */}
-        <main className="flex-1 p-8">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold">Profissionais da Saúde</h1>
-            <div className="flex items-center gap-4">
-              {/* Botão para abrir/fechar o painel de filtros avançados */}
+        {/* Painel de Filtros Avançados */}
+        {mostrarFiltros && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Filtro por Categoria Profissional */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Categoria Profissional
+                </label>
+                <select
+                  multiple
+                  value={filtros.categoria}
+                  onChange={(e) =>
+                    setFiltros(prev => ({
+                      ...prev,
+                      categoria: Array.from(
+                        e.target.selectedOptions,
+                        option => option.value
+                      )
+                    }))
+                  }
+                  className="w-full rounded-md border border-gray-300 p-2"
+                >
+                  {todasCategorias.map(cat => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Filtro por Área de Atuação */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Área de Atuação
+                </label>
+                <select
+                  multiple
+                  value={filtros.atuacao}
+                  onChange={(e) =>
+                    setFiltros(prev => ({
+                      ...prev,
+                      atuacao: Array.from(
+                        e.target.selectedOptions,
+                        option => option.value
+                      )
+                    }))
+                  }
+                  className="w-full rounded-md border border-gray-300 p-2"
+                >
+                  {todasAtuacoes.map(area => (
+                    <option key={area} value={area}>
+                      {area}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Filtro por Convênios */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Convênios
+                </label>
+                <select
+                  multiple
+                  value={filtros.convenios}
+                  onChange={(e) =>
+                    setFiltros(prev => ({
+                      ...prev,
+                      convenios: Array.from(
+                        e.target.selectedOptions,
+                        option => option.value
+                      )
+                    }))
+                  }
+                  className="w-full rounded-md border border-gray-300 p-2"
+                >
+                  {todosConvenios.map(conv => (
+                    <option key={conv} value={conv}>
+                      {conv}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Filtro por Valor (mínimo / máximo) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Faixa de Valor (R$)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    placeholder="Mín"
+                    value={filtros.valorMin}
+                    onChange={(e) =>
+                      setFiltros(prev => ({
+                        ...prev,
+                        valorMin: e.target.value
+                      }))
+                    }
+                    className="w-1/2 rounded-md border border-gray-300 p-2"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Máx"
+                    value={filtros.valorMax}
+                    onChange={(e) =>
+                      setFiltros(prev => ({
+                        ...prev,
+                        valorMax: e.target.value
+                      }))
+                    }
+                    className="w-1/2 rounded-md border border-gray-300 p-2"
+                  />
+                </div>
+              </div>
+
+              {/* Filtro por Nota Mínima */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Avaliação Mínima
+                </label>
+                <select
+                  value={filtros.notaMinima}
+                  onChange={(e) =>
+                    setFiltros(prev => ({
+                      ...prev,
+                      notaMinima: e.target.value
+                    }))
+                  }
+                  className="w-full rounded-md border border-gray-300 p-2"
+                >
+                  <option value="">Todas</option>
+                  <option value="4.5">4.5+</option>
+                  <option value="4.0">4.0+</option>
+                  <option value="3.5">3.5+</option>
+                </select>
+              </div>
+
+              {/* Filtro por Tipo de Atendimento (checkboxes) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tipo de Atendimento
+                </label>
+                <div className="space-y-2">
+                  {todosTiposAtendimento.map(tipo => (
+                    <label key={tipo.id} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filtros.tiposAtendimento.includes(tipo.id)}
+                        onChange={(e) => {
+                          const novosTipos = e.target.checked
+                            ? [...filtros.tiposAtendimento, tipo.id]
+                            : filtros.tiposAtendimento.filter(t => t !== tipo.id);
+                          setFiltros(prev => ({
+                            ...prev,
+                            tiposAtendimento: novosTipos
+                          }));
+                        }}
+                        className="rounded border-gray-300 text-blue-600 mr-2"
+                      />
+                      {tipo.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Botões de Ação */}
+            <div className="mt-6 flex justify-end gap-4">
               <button
-                onClick={() => setMostrarFiltros(!mostrarFiltros)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                onClick={limparFiltros}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg border border-gray-300"
               >
-                <Filter size={20} />
-                Filtros
+                Limpar Filtros
+              </button>
+              <button
+                onClick={() => setMostrarFiltros(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Aplicar Filtros
               </button>
             </div>
           </div>
+        )}
 
-          {/* Painel de Filtros Avançados (igual ao segundo código) */}
-          {mostrarFiltros && (
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Filtro por Categoria Profissional */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Categoria Profissional
-                  </label>
-                  <select
-                    multiple
-                    value={filtros.categoria}
-                    onChange={(e) =>
-                      setFiltros(prev => ({
-                        ...prev,
-                        categoria: Array.from(
-                          e.target.selectedOptions,
-                          option => option.value
-                        )
-                      }))
-                    }
-                    className="w-full rounded-md border border-gray-300 p-2"
-                  >
-                    {todasCategorias.map(cat => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filtro por Área de Atuação */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Área de Atuação
-                  </label>
-                  <select
-                    multiple
-                    value={filtros.atuacao}
-                    onChange={(e) =>
-                      setFiltros(prev => ({
-                        ...prev,
-                        atuacao: Array.from(
-                          e.target.selectedOptions,
-                          option => option.value
-                        )
-                      }))
-                    }
-                    className="w-full rounded-md border border-gray-300 p-2"
-                  >
-                    {todasAtuacoes.map(area => (
-                      <option key={area} value={area}>
-                        {area}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filtro por Convênios */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Convênios
-                  </label>
-                  <select
-                    multiple
-                    value={filtros.convenios}
-                    onChange={(e) =>
-                      setFiltros(prev => ({
-                        ...prev,
-                        convenios: Array.from(
-                          e.target.selectedOptions,
-                          option => option.value
-                        )
-                      }))
-                    }
-                    className="w-full rounded-md border border-gray-300 p-2"
-                  >
-                    {todosConvenios.map(conv => (
-                      <option key={conv} value={conv}>
-                        {conv}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filtro por Valor (mínimo / máximo) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Faixa de Valor (R$)
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      placeholder="Mín"
-                      value={filtros.valorMin}
-                      onChange={(e) =>
-                        setFiltros(prev => ({
-                          ...prev,
-                          valorMin: e.target.value
-                        }))
-                      }
-                      className="w-1/2 rounded-md border border-gray-300 p-2"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Máx"
-                      value={filtros.valorMax}
-                      onChange={(e) =>
-                        setFiltros(prev => ({
-                          ...prev,
-                          valorMax: e.target.value
-                        }))
-                      }
-                      className="w-1/2 rounded-md border border-gray-300 p-2"
-                    />
-                  </div>
-                </div>
-
-                {/* Filtro por Nota Mínima */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Avaliação Mínima
-                  </label>
-                  <select
-                    value={filtros.notaMinima}
-                    onChange={(e) =>
-                      setFiltros(prev => ({
-                        ...prev,
-                        notaMinima: e.target.value
-                      }))
-                    }
-                    className="w-full rounded-md border border-gray-300 p-2"
-                  >
-                    <option value="">Todas</option>
-                    <option value="4.5">4.5+</option>
-                    <option value="4.0">4.0+</option>
-                    <option value="3.5">3.5+</option>
-                  </select>
-                </div>
-
-                {/* Filtro por Tipo de Atendimento (checkboxes) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo de Atendimento
-                  </label>
-                  <div className="space-y-2">
-                    {todosTiposAtendimento.map(tipo => (
-                      <label key={tipo.id} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={filtros.tiposAtendimento.includes(tipo.id)}
-                          onChange={(e) => {
-                            const novosTipos = e.target.checked
-                              ? [...filtros.tiposAtendimento, tipo.id]
-                              : filtros.tiposAtendimento.filter(t => t !== tipo.id);
-                            setFiltros(prev => ({
-                              ...prev,
-                              tiposAtendimento: novosTipos
-                            }));
-                          }}
-                          className="rounded border-gray-300 text-blue-600 mr-2"
-                        />
-                        {tipo.label}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Botões de Ação (Limpar / Aplicar) */}
-              <div className="mt-6 flex justify-end gap-4">
-                <button
-                  onClick={limparFiltros}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg border border-gray-300"
-                >
-                  Limpar Filtros
-                </button>
-                <button
-                  onClick={() => setMostrarFiltros(false)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Aplicar Filtros
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Grid de Profissionais Filtrados */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {profissionaisFiltrados.map((profissional) => (
-              <div
-              key={profissional.id}
-              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200"
-            >
-              {/* Card Header */}
-              <div className="flex items-start">
+        {/* Grid de Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {profissionaisFiltrados.map((profissional) => (
+            <div
+            key={profissional.id}
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200"
+          >
+            {/* Card Header */}
+            <div className="flex items-start">
+              {profissional.foto ? (
                 <img
                   src={profissional.foto}
                   alt={profissional.nome}
                   className="w-32 h-32 rounded-full object-cover"
                 />
-                <div className="ml-4">
-                  <span className="text-sm text-blue-600 font-medium">
-                    {profissional.tipo}
-                  </span>
-                  <h2 className="text-xl font-semibold">{profissional.nome}</h2>
-                  <p className="text-gray-600">
-                    {Array.isArray(profissional.especializacao) 
-                      ? profissional.especializacao.join(', ') 
-                      : profissional.especializacao}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">{profissional.registro}</p>
-                </div>
-              </div>
-            
-              {/* Formação */}
-              <div className="mt-4">
-                <div className="flex items-center mb-2">
-                  <BookOpen className="text-blue-600 mr-2" size={20} />
-                  <span className="font-medium">Formação</span>
-                </div>
-                <div className="ml-8 space-y-1">
-                  {profissional.graduacao?.map((grad, index) => (
-                    <p key={index} className="text-sm text-gray-600">{grad}</p>
-                  ))}
-                  {profissional.pos_graduacao?.map((pos, index) => (
-                    <p key={index} className="text-sm text-gray-600">{pos}</p>
-                  ))}
-                </div>
-              </div>
-            
-              {/* Cursos e Certificações */}
-              <div className="mt-4">
-                <div className="flex items-center mb-2">
-                  <Award className="text-blue-600 mr-2" size={20} />
-                  <span className="font-medium">Cursos e Certificações</span>
-                </div>
-                <div className="ml-8">
-                  <ul className="list-disc list-inside space-y-1">
-                    {profissional.cursos?.map((curso, index) => (
-                      <li key={index} className="text-sm text-gray-600">
-                        {curso}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            
-              {/* Áreas de Atuação */}
-              <div className="mt-4">
-                <div className="flex items-center mb-2">
-                  <Award className="text-blue-600 mr-2" size={20} />
-                  <span className="font-medium">Áreas de Atuação:</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {profissional.atuacao?.map((area, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-sm"
-                    >
-                      {area}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            
-              {/* Convênios */}
-              <div className="mt-4">
-                <div className="flex items-center mb-2">
-                  <DollarSign className="text-blue-600 mr-2" size={20} />
-                  <span className="font-medium">Convênios:</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {profissional.planos?.map((plano, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-sm"
-                    >
-                      {plano}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tipos de Atendimento - NOVO */}
-              <div className="mt-4">
-                <div className="flex items-center mb-2">
-                  <User className="text-blue-600 mr-2" size={20} />
-                  <span className="font-medium">Tipos de Atendimento:</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {profissional.atendimentoonline && (
-                    <span className="px-2 py-1 bg-green-50 text-green-600 rounded-full text-sm">
-                      Online
-                    </span>
-                  )}
-                  {profissional.atendimentopresencial && (
-                    <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-sm">
-                      Presencial
-                    </span>
-                  )}
-                  {profissional.atendimentoemergencia && (
-                    <span className="px-2 py-1 bg-red-50 text-red-600 rounded-full text-sm">
-                      Emergência
-                    </span>
-                  )}
-                </div>
-              </div>
-            
-              {/* Avaliação e Valor */}
-              <div className="mt-4 flex items-center justify-between">
-                <div className="flex items-center">
-                  <Star className="text-yellow-400 mr-1" size={20} />
-                  <span className="font-medium">{profissional.pontuacao}</span>
-                  <span className="text-gray-500 ml-1">
-                    ({profissional.referencias} avaliações)
+              ) : (
+                <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center">
+                  <span className="text-3xl font-bold text-blue-600">
+                    {profissional.nome
+                      ?.split(' ')
+                      .map(palavra => palavra[0])
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase()}
                   </span>
                 </div>
-                <div className="text-xl font-bold text-green-600">
-                  R$ {Number(profissional.valor).toFixed(2)}
-                </div>
+              )}
+              <div className="ml-4">
+                <span className="text-sm text-blue-600 font-medium">
+                  {profissional.tipo}
+                </span>
+                <h2 className="text-xl font-semibold">{profissional.nome}</h2>
+                <p className="text-gray-600">
+                  {Array.isArray(profissional.especializacao) 
+                    ? profissional.especializacao.join(', ') 
+                    : profissional.especializacao}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">{profissional.registro}</p>
               </div>
-            
-              {/* Botão "Ver Detalhes" */}
-              <button className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                Ver Detalhes
-              </button>
             </div>
-            ))}
+          
+            {/* Formação */}
+            <div className="mt-4">
+              <div className="flex items-center mb-2">
+                <BookOpen className="text-blue-600 mr-2" size={20} />
+                <span className="font-medium">Formação</span>
+              </div>
+              <div className="ml-8 space-y-1">
+                {profissional.graduacao?.map((grad, index) => (
+                  <p key={index} className="text-sm text-gray-600">{grad}</p>
+                ))}
+                {profissional.pos_graduacao?.map((pos, index) => (
+                  <p key={index} className="text-sm text-gray-600">{pos}</p>
+                ))}
+              </div>
+            </div>
+          
+            {/* Cursos e Certificações */}
+            <div className="mt-4">
+              <div className="flex items-center mb-2">
+                <Award className="text-blue-600 mr-2" size={20} />
+                <span className="font-medium">Cursos e Certificações</span>
+              </div>
+              <div className="ml-8">
+                <ul className="list-disc list-inside space-y-1">
+                  {profissional.cursos?.map((curso, index) => (
+                    <li key={index} className="text-sm text-gray-600">
+                      {curso}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          
+            {/* Áreas de Atuação */}
+            <div className="mt-4">
+              <div className="flex items-center mb-2">
+                <Award className="text-blue-600 mr-2" size={20} />
+                <span className="font-medium">Áreas de Atuação:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {profissional.atuacao?.map((area, index) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-sm"
+                  >
+                    {area}
+                  </span>
+                ))}
+              </div>
+            </div>
+          
+            {/* Convênios */}
+            <div className="mt-4">
+              <div className="flex items-center mb-2">
+                <DollarSign className="text-blue-600 mr-2" size={20} />
+                <span className="font-medium">Convênios:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {profissional.planos?.map((plano, index) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-sm"
+                  >
+                    {plano}
+                  </span>
+                ))}
+              </div>
+            </div>
+          
+            {/* Tipos de Atendimento */}
+            <div className="mt-4">
+              <div className="flex items-center mb-2">
+                <User className="text-blue-600 mr-2" size={20} />
+                <span className="font-medium">Tipos de Atendimento:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {profissional.atendimentoonline && (
+                  <span className="px-2 py-1 bg-green-50 text-green-600 rounded-full text-sm">
+                    Online
+                  </span>
+                )}
+                {profissional.atendimentopresencial && (
+                  <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-sm">
+                    Presencial
+                  </span>
+                )}
+                {profissional.atendimentoemergencia && (
+                  <span className="px-2 py-1 bg-red-50 text-red-600 rounded-full text-sm">
+                    Emergência
+                  </span>
+                )}
+              </div>
+            </div>
+          
+            {/* Avaliação e Valor */}
+            <div className="mt-4 flex items-center justify-between">
+              <div className="flex items-center">
+                <Star className="text-yellow-400 mr-1" size={20} />
+                <span className="font-medium">{profissional.pontuacao}</span>
+                <span className="text-gray-500 ml-1">
+                  ({profissional.referencias} avaliações)
+                </span>
+              </div>
+              <div className="text-xl font-bold text-green-600">
+                R$ {Number(profissional.valor).toFixed(2)}
+              </div>
+            </div>
+          
+            {/* Botão "Ver Detalhes" */}
+            <button className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              Ver Detalhes
+            </button>
           </div>
-        </main>
-      </div>
-
-      {/* Footer */}
-      <footer className="bg-white shadow-md mt-auto py-4">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-center items-center">
-            <p className="text-gray-600 text-sm">
-              Desenvolvido por{' '}
-              <span className="font-semibold">Simões Tecnologia da Informação</span>
-            </p>
-          </div>
+          ))}
         </div>
-      </footer>
-
-      {/* Modal de Cadastro (exemplo, se quiser manter) */}
-      {mostrarCadastro && <CadastroModal onClose={() => setMostrarCadastro(false)} />}
+      </main>
     </div>
-  );
+
+    {/* Footer */}
+    <footer className="bg-white shadow-md mt-auto py-4">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex justify-center items-center">
+          <p className="text-gray-600 text-sm">
+            Desenvolvido por{' '}
+            <span className="font-semibold">Simões Tecnologia da Informação</span>
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    {/* Modal de Cadastro */}
+    {mostrarCadastro && <CadastroModal onClose={() => setMostrarCadastro(false)} />}
+  </div>
+);
+  
 };
 
 export default Dashboard;
