@@ -16,6 +16,9 @@ const API_URL = process.env.NODE_ENV === 'production'
 
 // Componente do Modal de Cadastro
 const CadastroModal = ({ onClose }) => {
+
+  <SpeedInsights/>
+
   const [step, setStep] = useState(1);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -850,6 +853,8 @@ const CadastroModal = ({ onClose }) => {
 };
 
 const Dashboard = () => {
+
+  <SpeedInsights/>
 
   const [menuAberto, setMenuAberto] = useState(false);
   const [mostrarCadastro, setMostrarCadastro] = useState(false);
