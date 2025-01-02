@@ -164,7 +164,7 @@ const CadastroModal = ({ onClose }) => {
         pos_graduacao: formData.pos_graduacao.filter(item => item.trim() !== ''),
         cursos: formData.cursos.filter(item => item.trim() !== ''),
         atuacao: formData.atuacao.filter(item => item.trim() !== ''),
-        valor: formData.valor,
+        valor: formData.valor === '' || isNaN(formData.valor) ? 0 : Number(formData.valor),
         planos: formData.planos.filter(item => item.trim() !== ''),
         atendimentoonline: formData.atendimentoOnline,
         atendimentoemergencia: formData.atendimentoEmergencia,
@@ -585,7 +585,7 @@ const CadastroModal = ({ onClose }) => {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    Áreas de Atuação
+                    Áreas de Atuação (tags)
                   </label>
                   <button
                     type="button"
@@ -624,18 +624,45 @@ const CadastroModal = ({ onClose }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Valor da Consulta
                 </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                    R$
-                  </span>
-                  <input
-                    type="number"
-                    value={formData.valor}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, valor: e.target.value }))
-                    }
-                    className="w-full rounded-lg border border-gray-300 p-2.5 pl-8"
-                  />
+                <div className="space-y-2">
+                  {/* Checkbox para "Valores a consultar" */}
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.valor === ''}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          // Se marcar o checkbox, limpa o valor
+                          setFormData((prev) => ({ ...prev, valor: '' }));
+                        } else {
+                          // Se desmarcar o checkbox, inicializa com valor zero
+                          setFormData((prev) => ({ ...prev, valor: '0' }));
+                        }
+                      }}
+                      className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                    />
+                    <label className="ml-2 block text-sm text-gray-700">
+                      Valores a consultar
+                    </label>
+                  </div>
+                  
+                  {/* Input de valor (desabilitado quando "Valores a consultar" estiver marcado) */}
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                      R$
+                    </span>
+                    <input
+                      type="number"
+                      value={formData.valor}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, valor: e.target.value }))
+                      }
+                      disabled={formData.valor === ''}
+                      className={`w-full rounded-lg border border-gray-300 p-2.5 pl-8 ${
+                        formData.valor === '' ? 'bg-gray-100' : ''
+                      }`}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1367,7 +1394,10 @@ const Dashboard = () => {
                 </span>
               </div>
               <div className="text-xl font-bold text-green-600">
-                R$ {Number(profissional.valor).toFixed(2)}
+                {Number(profissional.valor) === 0 
+                  ? "Valor a Consultar"
+                  : `R$ ${Number(profissional.valor).toFixed(2)}`
+                }
               </div>
             </div>
           
