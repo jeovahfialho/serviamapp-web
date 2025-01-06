@@ -23,10 +23,18 @@ const CadastroModal = ({ onClose }) => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Adicionar o estado do LGPD
+  const [lgpdConsent, setLgpdConsent] = useState({
+    dataProcessing: false,
+    marketplaceUsage: false
+  });
+
   // Estado que armazena os dados do formulário
   const [formData, setFormData] = useState({
     tipo: '',
     nome: '',
+    cpf: '',          // Novo campo
+    email: '',        // Novo campo
     foto: null,
     registro: '',
     telefone: '',        // Novo campo
@@ -152,13 +160,22 @@ const CadastroModal = ({ onClose }) => {
 
   // Função de submit - ADICIONE AQUI
   const handleSubmit = async () => {
+    // Verificar consentimento LGPD
+    if (!lgpdConsent.dataProcessing || !lgpdConsent.marketplaceUsage) {
+      alert('Por favor, aceite os termos de consentimento para continuar.');
+      return;
+    }
+  
     if (isSubmitting) return;
     setIsSubmitting(true);
+  
     try {
       // Remover campos vazios dos arrays
       const dataToSend = {
         tipo: formData.tipo,
         nome: formData.nome,
+        cpf: formData.cpf,           // Novo campo
+        email: formData.email,       // Novo campo
         foto: formData.foto,
         registro: formData.registro,
         telefone: formData.telefone,
@@ -172,7 +189,15 @@ const CadastroModal = ({ onClose }) => {
         atendimentoonline: formData.atendimentoOnline,
         atendimentoemergencia: formData.atendimentoEmergencia,
         atendimentopresencial: formData.atendimentoPresencial,
-        status: 'pending'
+        status: 'pending',
+        created_at: new Date().toISOString(),  // Novo campo
+        updated_at: new Date().toISOString(),  // Novo campo
+        // Adicionar dados do consentimento LGPD
+        lgpdConsent: {
+          dataProcessing: lgpdConsent.dataProcessing,
+          marketplaceUsage: lgpdConsent.marketplaceUsage,
+          consentDate: new Date().toISOString()
+        }
       };
   
       console.log('Dados a serem enviados:', dataToSend); // Para debug
@@ -199,6 +224,8 @@ const CadastroModal = ({ onClose }) => {
     } catch (error) {
       console.error('Erro ao enviar dados:', error);
       alert('Erro ao cadastrar profissional: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -207,7 +234,8 @@ const CadastroModal = ({ onClose }) => {
     { number: 1, title: 'Informações Básicas' },
     { number: 2, title: 'Formação' },
     { number: 3, title: 'Atuação' },
-    { number: 4, title: 'Atendimento' }
+    { number: 4, title: 'Atendimento' },
+    { number: 5, title: 'Termos e Consentimento' }  // Novo step
   ];
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, steps.length));
@@ -278,6 +306,38 @@ const CadastroModal = ({ onClose }) => {
                     )}
                   </div>
                 </div>
+              </div>
+              
+              {/* CPF - NOVO */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  CPF
+                </label>
+                <input
+                  type="text"
+                  value={formData.cpf}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, cpf: e.target.value }))
+                  }
+                  className="w-full rounded-lg border border-gray-300 p-2.5"
+                  placeholder="000.000.000-00"
+                />
+              </div>
+
+              {/* Email - NOVO */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  E-mail
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, email: e.target.value }))
+                  }
+                  className="w-full rounded-lg border border-gray-300 p-2.5"
+                  placeholder="seu@email.com"
+                />
               </div>
 
               {/* Categoria */}
@@ -525,7 +585,7 @@ const CadastroModal = ({ onClose }) => {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    Cursos e Especializações
+                    Cursos e Formações
                   </label>
                   <button
                     type="button"
@@ -769,6 +829,88 @@ const CadastroModal = ({ onClose }) => {
             </div>
           </div>
         );
+        case 5:
+          return (
+            <div className="space-y-6">
+              <h3 className="text-lg font-medium">Termos de Consentimento</h3>
+              
+              <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                <p className="text-sm text-blue-800 mb-2">
+                  Seus dados serão utilizados de acordo com a Lei Geral de Proteção de Dados (LGPD).
+                  Por favor, leia e confirme seu consentimento abaixo:
+                </p>
+              </div>
+    
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      type="checkbox"
+                      checked={lgpdConsent.dataProcessing}
+                      onChange={(e) => setLgpdConsent(prev => ({
+                        ...prev,
+                        dataProcessing: e.target.checked
+                      }))}
+                      className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                    />
+                  </div>
+                  <div className="ml-3">
+                    <label className="text-sm text-gray-700">
+                      Concordo com o processamento dos meus dados para criação de um perfil profissional 
+                      em um marketplace nacional e internacional. Entendo que minhas informações serão 
+                      utilizadas exclusivamente para conectar-me com potenciais pacientes/clientes.
+                    </label>
+                  </div>
+                </div>
+    
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      type="checkbox"
+                      checked={lgpdConsent.marketplaceUsage}
+                      onChange={(e) => setLgpdConsent(prev => ({
+                        ...prev,
+                        marketplaceUsage: e.target.checked
+                      }))}
+                      className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                    />
+                  </div>
+                  <div className="ml-3">
+                    <label className="text-sm text-gray-700">
+                      Estou ciente de que meus dados profissionais serão exibidos publicamente na 
+                      plataforma e poderão ser acessados por usuários interessados em meus serviços. 
+                      Posso solicitar a exclusão dos meus dados a qualquer momento.
+                    </label>
+                  </div>
+                </div>
+    
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Segurança e Disponibilidade:</p>
+                  <ul className="list-disc list-inside text-sm text-gray-600 space-y-2">
+                    <li>Seus dados são armazenados em infraestrutura de nuvem distribuída geograficamente</li>
+                    <li>Sistema com alta disponibilidade e backups automáticos</li>
+                    <li>Dados criptografados em repouso e em trânsito</li>
+                    <li>Infraestrutura com certificações de segurança internacionais</li>
+                    <li>Monitoramento contínuo de segurança e proteção contra ameaças</li>
+                    <li>Sistema hospedado em provedores de nuvem de classe mundial</li>
+                    <li>Conformidade com padrões internacionais de proteção de dados</li>
+                  </ul>
+                </div>
+    
+                <div className="mt-4 text-sm text-gray-500">
+                  <p className="font-medium">Informações importantes:</p>
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    <li>Seus dados não serão vendidos ou compartilhados com terceiros</li>
+                    <li>Você pode solicitar a exclusão dos seus dados a qualquer momento</li>
+                    <li>Apenas informações profissionais serão exibidas publicamente</li>
+                    <li>Você terá controle sobre quais informações serão visíveis</li>
+                    <li>Acesso ao sistema é protegido por autenticação segura</li>
+                    <li>Sistema com disponibilidade 24/7 e suporte técnico</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          );
       default:
         return null;
     }
@@ -1264,11 +1406,13 @@ const Dashboard = () => {
             {/* Card Header */}
             <div className="flex items-start">
               {profissional.foto ? (
-                <img
-                  src={profissional.foto}
-                  alt={profissional.nome}
-                  className="w-32 h-32 rounded-full object-cover"
-                />
+                <div className="w-32 h-32 rounded-full overflow-hidden flex-shrink-0">
+                  <img
+                    src={profissional.foto}
+                    alt={profissional.nome}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               ) : (
                 <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center">
                   <span className="text-3xl font-bold text-blue-600">
