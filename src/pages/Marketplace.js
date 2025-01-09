@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search, Filter, User, BookOpen, Heart, 
-  DollarSign, Award, Star, Phone
+  DollarSign, Award, Star, Phone, LayoutDashboard
 } from 'lucide-react';
 import ServianLogoText from '../components/ServianLogoText';
 
@@ -12,6 +12,7 @@ const MarketplacePage = () => {
   const [profissionaisFiltrados, setProfissionaisFiltrados] = useState([]);
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [busca, setBusca] = useState('');
+  const [selectedProfContact, setSelectedProfContact] = useState(null);
 
   // Estado dos filtros
   const [filtros, setFiltros] = useState({
@@ -152,19 +153,27 @@ const MarketplacePage = () => {
 
             {/* Ações */}
             <div className="flex items-center gap-4">
-            <button
-                onClick={() => setMostrarFiltros(!mostrarFiltros)}
-                className="flex items-center gap-2 px-4 py-2 text-white hover:bg-white/10 rounded-lg"
-            >
-                <Filter className="h-5 w-5" />
-                <span>Filtros</span>
-            </button>
-              <button 
-                onClick={() => navigate('/login')}
-                className="text-white hover:text-gray-200 transition-colors"
+              <button
+                  onClick={() => setMostrarFiltros(!mostrarFiltros)}
+                  className="flex items-center gap-2 px-4 py-2 text-white hover:bg-white/10 rounded-lg"
+              >
+                  <Filter className="h-5 w-5" />
+                  <span>Filtros</span>
+              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => navigate('/dashboard')}
+                  className="text-white hover:text-gray-200 transition-colors"
                 >
-                <User className="h-6 w-6" />
+                  <LayoutDashboard className="h-6 w-6" />
                 </button>
+                <button 
+                  onClick={() => navigate('/login')}
+                  className="text-white hover:text-gray-200 transition-colors"
+                >
+                  <User className="h-6 w-6" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -515,10 +524,36 @@ const MarketplacePage = () => {
                     </div>
 
                     {/* Botão de contato */}
-                    <button className="mt-4 w-full flex items-center justify-center gap-2 bg-[#273440] text-white py-3 rounded-xl hover:bg-[#1e2832] transition-colors">
-                      <Phone className="h-5 w-5" />
-                      <span>Contatar Profissional</span>
-                    </button>
+                    <div className="mt-4">
+                      <button 
+                        onClick={() => setSelectedProfContact(
+                          selectedProfContact === prof.id ? null : prof.id
+                        )}
+                        className="w-full flex items-center justify-center gap-2 bg-[#273440] text-white py-3 rounded-xl hover:bg-[#1e2832] transition-colors"
+                      >
+                        <Phone className="h-5 w-5" />
+                        <span>Contatar Profissional</span>
+                      </button>
+                      
+                      {selectedProfContact === prof.id && (
+                        <div className="mt-2 flex items-center justify-between bg-gray-100 p-3 rounded-lg">
+                          {prof.telefone && (
+                            <a 
+                              href={`https://wa.me/${prof.telefone}?text=Olá, cheguei até você por meio da Plataforma Serviam.`} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="flex items-center gap-2 text-green-600"
+                            >
+                              <Phone className="h-5 w-5 text-green-500" />
+                              {prof.telefone}
+                            </a>
+                          )}
+                          {prof.email && (
+                            <span className="text-gray-700">{prof.email}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
