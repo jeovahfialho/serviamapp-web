@@ -30,9 +30,10 @@ const CadastroModal = ({ onClose }) => {
       atuacao: [''],
       valor: '',
       planos: ['Particular'],
-      atendimentoOnline: false,
-      atendimentoEmergencia: false,
-      atendimentoPresencial: false,
+      atendimentoonline: false,
+      atendimentoemergencia: false,
+      atendimentopresencial: false,
+      faixa_etaria: [''],
       status: 'pending'
     });
   
@@ -106,8 +107,23 @@ const CadastroModal = ({ onClose }) => {
       setIsSubmitting(true);
     
       try {
+        const token = localStorage.getItem('token');
+        
+        const userResponse = await fetch('https://serviamapp-server.vercel.app/api/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+    
+        if (!userResponse.ok) {
+          throw new Error('Erro ao buscar dados do usuário');
+        }
+    
+        const userData = await userResponse.json();
+    
         const dataToSend = {
           ...formData,
+          user_id: userData.user_id,  // Usar o ID do usuário retornado pela API
           especializacao: formData.especializacao.filter(item => item.trim() !== ''),
           graduacao: formData.graduacao.filter(item => item.trim() !== ''),
           pos_graduacao: formData.pos_graduacao.filter(item => item.trim() !== ''),
@@ -123,11 +139,14 @@ const CadastroModal = ({ onClose }) => {
             consentDate: new Date().toISOString()
           }
         };
+
+        console.log('Dados sendo enviados:', JSON.stringify(dataToSend, null, 2));
     
         const response = await fetch('https://serviamapp-server.vercel.app/api/profissionais', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`  // Incluir o token na requisição
           },
           body: JSON.stringify(dataToSend)
         });
@@ -697,64 +716,105 @@ const CadastroModal = ({ onClose }) => {
           return (
             <div className="space-y-6">
               <h3 className="text-lg font-medium">Atendimento</h3>
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.atendimentoOnline}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        atendimentoOnline: e.target.checked
-                      }))
-                    }
-                    className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                  />
-                  <label className="ml-2 block text-sm text-gray-700">
-                    Atendimento Online
-                  </label>
+              <div className="grid grid-cols-2 gap-6">
+                {/* Lado esquerdo - Tipos de Atendimento */}
+                
+                <div className="space-y-4">
+                <h3 className="text-lg font-medium mb-2">Formas</h3>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.atendimentoonline}
+                      onChange={(e) => {
+                        console.log('Atendimento Online antes:', formData.atendimentonline);
+                        console.log('Novo valor:', e.target.checked);
+                        setFormData((prev) => ({
+                          ...prev,
+                          atendimentoonline: e.target.checked
+                        }))
+                      }}
+                      className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                    />
+                    <label className="ml-2 block text-sm text-gray-700">
+                      Atendimento Online
+                    </label>
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.atendimentoemergencia}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          atendimentomergencia: e.target.checked
+                        }))
+                      }
+                      className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                    />
+                    <label className="ml-2 block text-sm text-gray-700">
+                      Atendimento de Emergência
+                    </label>
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.atendimentopresencial}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          atendimentopresencial: e.target.checked
+                        }))
+                      }
+                      className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                    />
+                    <label className="ml-2 block text-sm text-gray-700">
+                      Atendimento Presencial
+                    </label>
+                  </div>
                 </div>
-  
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.atendimentoEmergencia}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        atendimentoEmergencia: e.target.checked
-                      }))
-                    }
-                    className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                  />
-                  <label className="ml-2 block text-sm text-gray-700">
-                    Atendimento de Emergência
-                  </label>
-                </div>
-  
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.atendimentoPresencial}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        atendimentoPresencial: e.target.checked
-                      }))
-                    }
-                    className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                  />
-                  <label className="ml-2 block text-sm text-gray-700">
-                    Atendimento Presencial
-                  </label>
+
+                {/* Lado direito - Faixas Etárias */}
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Faixas Etárias Atendidas</h3>
+                  <div className="space-y-2">
+                    {[
+                      "crianças",
+                      "adolescentes", 
+                      "adultos", 
+                      "idosos"
+                    ].map((faixa) => (
+                      <div key={faixa} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.faixa_etaria.includes(faixa)}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              faixa_etaria: e.target.checked
+                                ? [...prev.faixa_etaria, faixa]
+                                : prev.faixa_etaria.filter((f) => f !== faixa)
+                            }))
+                          }
+                          className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                        />
+                        <label className="ml-2 block text-sm text-gray-700 capitalize">
+                          {faixa}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           );
         case 5:
+
           return (
             <div className="space-y-6">
               <h3 className="text-lg font-medium">Termos de Consentimento</h3>
+              
               
               <div className="bg-blue-50 p-4 rounded-lg mb-6">
                 <p className="text-sm text-blue-800 mb-2">
@@ -880,10 +940,12 @@ const CadastroModal = ({ onClose }) => {
             </button>
             <button
               onClick={step === steps.length ? handleSubmit : nextStep}
-              disabled={isSubmitting}
+              disabled={step === steps.length && (!lgpdConsent.dataProcessing || !lgpdConsent.marketplaceUsage)}
               className={`px-4 py-2 rounded-lg text-white flex items-center justify-center gap-2 transition-colors ${
-                isSubmitting 
-                  ? 'bg-gray-400 cursor-not-allowed opacity-70' 
+                step === steps.length 
+                  ? ((!lgpdConsent.dataProcessing || !lgpdConsent.marketplaceUsage)
+                    ? 'bg-gray-400 cursor-not-allowed opacity-70' 
+                    : 'bg-blue-600 hover:bg-blue-700')
                   : 'bg-blue-600 hover:bg-blue-700'
               }`}
             >

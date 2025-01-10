@@ -106,6 +106,13 @@ const Dashboard = () => {
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1">
                   <button 
+                    onClick={() => navigate('/marketplace')}
+                    className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full"
+                  >
+                    <Users size={16} className="mr-2" />
+                    Marketplace
+                  </button>
+                  <button 
                     onClick={() => {
                       localStorage.removeItem('token');
                       navigate('/login');
