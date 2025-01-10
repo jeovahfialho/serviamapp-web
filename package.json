@@ -4,14 +4,20 @@
   "private": true,
   "dependencies": {
     "@nhost/nhost-js": "^3.2.1",
+    "@supabase/supabase-js": "^2.47.12",
     "@vercel/speed-insights": "^1.1.0",
+    "cleave.js": "^1.6.0",
     "cra-template": "1.2.0",
     "lucide-react": "^0.469.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-image-crop": "^11.0.7",
+    "react-input-mask": "^2.0.4",
+    "react-number-format": "^5.4.3",
+    "react-router-dom": "^7.1.1",
     "react-scripts": "^5.0.1",
-    "web-vitals": "^3.5.2"
+    "web-vitals": "^3.5.2",
+    "zustand": "^5.0.3"
   },
   "scripts": {
     "start": "react-scripts start",
