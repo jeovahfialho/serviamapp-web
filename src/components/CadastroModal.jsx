@@ -287,6 +287,7 @@ const CadastroModal = ({ onClose }) => {
                     <option value="Consultor">Consultor</option>
                     <option value="Assessor">Assessor</option>
                     <option value="Especialista">Especialista</option>
+                    <option value="Cuidador">Cuidador</option>
                   </select>
                 </div>
   
@@ -788,15 +789,23 @@ const CadastroModal = ({ onClose }) => {
                       <div key={faixa} className="flex items-center">
                         <input
                           type="checkbox"
-                          checked={formData.faixa_etaria.includes(faixa)}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
+                          checked={formData.faixa_etaria?.includes(faixa)}
+                          onChange={(e) => {
+                            // Primeiro, pegamos o array atual e removemos quaisquer valores vazios
+                            const arrayAtual = (formData.faixa_etaria || []).filter(f => f !== "");
+                            
+                            // Agora construímos o novo array baseado na seleção
+                            const novasFaixas = e.target.checked
+                              ? [...arrayAtual, faixa]
+                              : arrayAtual.filter(f => f !== faixa);
+                            
+                            console.log('Array limpo:', novasFaixas);
+                            
+                            setFormData(prev => ({
                               ...prev,
-                              faixa_etaria: e.target.checked
-                                ? [...prev.faixa_etaria, faixa]
-                                : prev.faixa_etaria.filter((f) => f !== faixa)
-                            }))
-                          }
+                              faixa_etaria: novasFaixas
+                            }));
+                          }}
                           className="h-4 w-4 text-blue-600 rounded border-gray-300"
                         />
                         <label className="ml-2 block text-sm text-gray-700 capitalize">
