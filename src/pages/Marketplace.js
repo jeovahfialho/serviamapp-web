@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Search, Filter, User, BookOpen, Heart, 
-  DollarSign, Award, Star, Phone, LayoutDashboard
+  Search, Filter, User, BookOpen, Trophy,
+  DollarSign, Award, Star, Phone, LayoutDashboard,
+  ChevronDown, ChevronUp, Users , CheckCircle2, Medal
 } from 'lucide-react';
 import ServianLogoText from '../components/ServianLogoText';
+import SideComponents from '../components/SideComponents';
 
 const MarketplacePage = () => {
   const navigate = useNavigate();
@@ -13,6 +15,7 @@ const MarketplacePage = () => {
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [busca, setBusca] = useState('');
   const [selectedProfContact, setSelectedProfContact] = useState(null);
+  const [expandedSections, setExpandedSections] = useState({});
 
   // Estado dos filtros
   const [filtros, setFiltros] = useState({
@@ -36,6 +39,76 @@ const MarketplacePage = () => {
     { id: 'atendimentoEmergencia', label: 'Atendimento de Emergência' },
     { id: 'atendimentoPresencial', label: 'Atendimento Presencial' }
   ];
+
+  // Add this helper function to toggle sections
+  const toggleSection = (profId, section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [profId]: {
+        ...prev[profId],
+        [section]: !prev[profId]?.[section]
+      }
+    }));
+  };
+
+  // Create a reusable section component
+  const CollapsibleSection = ({ prof, sectionKey, icon: Icon, title, children }) => {
+    const isExpanded = expandedSections[prof.id]?.[sectionKey];
+    
+    return (
+      <div className="mt-1">
+        <button 
+          onClick={() => toggleSection(prof.id, sectionKey)}
+          className="w-full flex items-center justify-between hover:bg-gray-50 rounded-lg p-1 transition-colors"
+        >
+          <div className="flex items-center">
+            <Icon className="text-blue-600 mr-1.5 h-5 w-5" />
+            <span className="font-medium text-gray-700">{title}</span>
+          </div>
+          {isExpanded ? (
+            <ChevronUp className="h-5 w-5 text-gray-400" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-gray-400" />
+          )}
+        </button>
+        
+        {isExpanded && (
+          <div className="mt-0.5 pl-6">
+            {children}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const formatarNome = (nome) => {
+    // Define o tamanho máximo (baseado no exemplo "Gabriela Teixeira da Silva")
+    const MAX_LENGTH = 25;
+    
+    if (nome.length <= MAX_LENGTH) return nome;
+    
+    // Divide o nome em partes
+    const partes = nome.split(' ');
+    
+    // Se tiver só duas partes, abrevia a última
+    if (partes.length === 2) {
+      return `${partes[0]} ${partes[1].charAt(0)}.`;
+    }
+    
+    // Se tiver mais partes, mantém primeiro e último nome, abrevia os do meio
+    const primeiroNome = partes[0];
+    const ultimoNome = partes[partes.length - 1];
+    const meiosAbreviados = partes.slice(1, -1).map(nome => `${nome.charAt(0)}.`);
+    
+    const nomeFormatado = [primeiroNome, ...meiosAbreviados, ultimoNome].join(' ');
+    
+    // Se ainda estiver muito longo, remove o último nome e adiciona a inicial
+    if (nomeFormatado.length > MAX_LENGTH) {
+      return `${primeiroNome} ${meiosAbreviados.join(' ')}${ultimoNome.charAt(0)}.`;
+    }
+    
+    return nomeFormatado;
+  };
 
   // Filtrar dados
   // Este é o novo useEffect que aplica os filtros
@@ -180,11 +253,11 @@ const MarketplacePage = () => {
       </nav>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Grid Layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Main Content Area */}
-          <div className="xl:col-span-2">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Grid Layout - Agora com 4 colunas */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {/* Coluna Principal com Cards dos Profissionais */}
+          <div className="lg:col-span-2 xl:col-span-3">
             {/* Banner/Hero Section */}
             <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-8 mb-8 text-white">
               <h1 className="text-3xl font-bold mb-4">
@@ -196,231 +269,239 @@ const MarketplacePage = () => {
             </div>
 
             {/* Painel de Filtros Avançados */}
-    {mostrarFiltros && (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Categoria Profissional */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Categoria Profissional
-            </label>
-            <select
-              multiple
-              value={filtros.categoria}
-              onChange={(e) =>
-                setFiltros(prev => ({
-                  ...prev,
-                  categoria: Array.from(
-                    e.target.selectedOptions,
-                    option => option.value
-                  )
-                }))
-              }
-              className="w-full rounded-lg border border-gray-300 p-2.5"
-            >
-              {todasCategorias.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
+            {mostrarFiltros && (
+              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Categoria Profissional */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Categoria Profissional
+                    </label>
+                    <select
+                      multiple
+                      value={filtros.categoria}
+                      onChange={(e) =>
+                        setFiltros(prev => ({
+                          ...prev,
+                          categoria: Array.from(
+                            e.target.selectedOptions,
+                            option => option.value
+                          )
+                        }))
+                      }
+                      className="w-full rounded-lg border border-gray-300 p-2.5"
+                    >
+                      {todasCategorias.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
 
-          {/* Área de Atuação */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Área de Atuação
-            </label>
-            <select
-              multiple
-              value={filtros.atuacao}
-              onChange={(e) =>
-                setFiltros(prev => ({
-                  ...prev,
-                  atuacao: Array.from(
-                    e.target.selectedOptions,
-                    option => option.value
-                  )
-                }))
-              }
-              className="w-full rounded-lg border border-gray-300 p-2.5"
-            >
-              {todasAtuacoes.map(area => (
-                <option key={area} value={area}>{area}</option>
-              ))}
-            </select>
-          </div>
+                  {/* Área de Atuação */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Área de Atuação
+                    </label>
+                    <select
+                      multiple
+                      value={filtros.atuacao}
+                      onChange={(e) =>
+                        setFiltros(prev => ({
+                          ...prev,
+                          atuacao: Array.from(
+                            e.target.selectedOptions,
+                            option => option.value
+                          )
+                        }))
+                      }
+                      className="w-full rounded-lg border border-gray-300 p-2.5"
+                    >
+                      {todasAtuacoes.map(area => (
+                        <option key={area} value={area}>{area}</option>
+                      ))}
+                    </select>
+                  </div>
 
-          {/* Convênios */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Convênios
-            </label>
-            <select
-              multiple
-              value={filtros.convenios}
-              onChange={(e) =>
-                setFiltros(prev => ({
-                  ...prev,
-                  convenios: Array.from(
-                    e.target.selectedOptions,
-                    option => option.value
-                  )
-                }))
-              }
-              className="w-full rounded-lg border border-gray-300 p-2.5"
-            >
-              {todosConvenios.map(conv => (
-                <option key={conv} value={conv}>{conv}</option>
-              ))}
-            </select>
-          </div>
+                  {/* Convênios */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Convênios
+                    </label>
+                    <select
+                      multiple
+                      value={filtros.convenios}
+                      onChange={(e) =>
+                        setFiltros(prev => ({
+                          ...prev,
+                          convenios: Array.from(
+                            e.target.selectedOptions,
+                            option => option.value
+                          )
+                        }))
+                      }
+                      className="w-full rounded-lg border border-gray-300 p-2.5"
+                    >
+                      {todosConvenios.map(conv => (
+                        <option key={conv} value={conv}>{conv}</option>
+                      ))}
+                    </select>
+                  </div>
 
-          {/* Filtro por Valor */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Faixa de Valor (R$)
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                placeholder="Mín"
-                value={filtros.valorMin}
-                onChange={(e) =>
-                  setFiltros(prev => ({
-                    ...prev,
-                    valorMin: e.target.value
-                  }))
-                }
-                className="w-1/2 rounded-lg border border-gray-300 p-2.5"
-              />
-              <input
-                type="number"
-                placeholder="Máx"
-                value={filtros.valorMax}
-                onChange={(e) =>
-                  setFiltros(prev => ({
-                    ...prev,
-                    valorMax: e.target.value
-                  }))
-                }
-                className="w-1/2 rounded-lg border border-gray-300 p-2.5"
-              />
-            </div>
-          </div>
+                  {/* Filtro por Valor */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Faixa de Valor (R$)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        placeholder="Mín"
+                        value={filtros.valorMin}
+                        onChange={(e) =>
+                          setFiltros(prev => ({
+                            ...prev,
+                            valorMin: e.target.value
+                          }))
+                        }
+                        className="w-1/2 rounded-lg border border-gray-300 p-2.5"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Máx"
+                        value={filtros.valorMax}
+                        onChange={(e) =>
+                          setFiltros(prev => ({
+                            ...prev,
+                            valorMax: e.target.value
+                          }))
+                        }
+                        className="w-1/2 rounded-lg border border-gray-300 p-2.5"
+                      />
+                    </div>
+                  </div>
 
-          {/* Avaliação Mínima */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Avaliação Mínima
-            </label>
-            <select
-              value={filtros.notaMinima}
-              onChange={(e) =>
-                setFiltros(prev => ({
-                  ...prev,
-                  notaMinima: e.target.value
-                }))
-              }
-              className="w-full rounded-lg border border-gray-300 p-2.5"
-            >
-              <option value="">Todas</option>
-              <option value="4.5">4.5+</option>
-              <option value="4.0">4.0+</option>
-              <option value="3.5">3.5+</option>
-            </select>
-          </div>
+                  {/* Avaliação Mínima */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Avaliação Mínima
+                    </label>
+                    <select
+                      value={filtros.notaMinima}
+                      onChange={(e) =>
+                        setFiltros(prev => ({
+                          ...prev,
+                          notaMinima: e.target.value
+                        }))
+                      }
+                      className="w-full rounded-lg border border-gray-300 p-2.5"
+                    >
+                      <option value="">Todas</option>
+                      <option value="4.5">4.5+</option>
+                      <option value="4.0">4.0+</option>
+                      <option value="3.5">3.5+</option>
+                    </select>
+                  </div>
 
-          {/* Tipo de Atendimento */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tipo de Atendimento
-            </label>
-            <div className="space-y-2">
-              {todosTiposAtendimento.map(tipo => (
-                <label key={tipo.id} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={filtros.tiposAtendimento.includes(tipo.id)}
-                    onChange={(e) => {
-                      const novosTipos = e.target.checked
-                        ? [...filtros.tiposAtendimento, tipo.id]
-                        : filtros.tiposAtendimento.filter(t => t !== tipo.id);
-                      setFiltros(prev => ({
-                        ...prev,
-                        tiposAtendimento: novosTipos
-                      }));
-                    }}
-                    className="rounded border-gray-300 text-blue-600 mr-2"
-                  />
-                  {tipo.label}
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
+                  {/* Tipo de Atendimento */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tipo de Atendimento
+                    </label>
+                    <div className="space-y-2">
+                      {todosTiposAtendimento.map(tipo => (
+                        <label key={tipo.id} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={filtros.tiposAtendimento.includes(tipo.id)}
+                            onChange={(e) => {
+                              const novosTipos = e.target.checked
+                                ? [...filtros.tiposAtendimento, tipo.id]
+                                : filtros.tiposAtendimento.filter(t => t !== tipo.id);
+                              setFiltros(prev => ({
+                                ...prev,
+                                tiposAtendimento: novosTipos
+                              }));
+                            }}
+                            className="rounded border-gray-300 text-blue-600 mr-2"
+                          />
+                          {tipo.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
-        {/* Botões de Ação */}
-        <div className="mt-6 flex justify-end gap-4">
-          <button
-            onClick={limparFiltros}
-            className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg border border-gray-300"
-          >
-            Limpar Filtros
-          </button>
-          <button
-            onClick={() => setMostrarFiltros(false)}
-            className="px-4 py-2 bg-[#273440] text-white rounded-lg hover:bg-[#1e2832]"
-          >
-            Aplicar Filtros
-          </button>
-        </div>
-      </div>
-    )}
+                {/* Botões de Ação */}
+                <div className="mt-6 flex justify-end gap-4">
+                  <button
+                    onClick={limparFiltros}
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg border border-gray-300"
+                  >
+                    Limpar Filtros
+                  </button>
+                  <button
+                    onClick={() => setMostrarFiltros(false)}
+                    className="px-4 py-2 bg-[#273440] text-white rounded-lg hover:bg-[#1e2832]"
+                  >
+                    Aplicar Filtros
+                  </button>
+                </div>
+              </div>
+            )}
     
             {/* Profissionais Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {profissionaisFiltrados.map((prof) => (
                 <div key={prof.id} className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow">
-                  <div className="p-6">
-                    {/* Header */}
-                    <div className="flex space-x-4">
-                    {prof.foto ? (
-                    <img
-                        src={prof.foto}
-                        alt={prof.nome}
-                        className="h-20 w-20 rounded-full object-cover border-2 border-gray-100"
-                    />
-                    ) : (
-                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                        <User className="h-8 w-8 text-blue-600" />
+                  {prof.pontuacao >= 4.8 && (
+                    <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-xs font-bold px-3 py-1 rounded-tl-2xl rounded-br-2xl absolute">
+                      TOP PROFISSIONAL
                     </div>
-                    )}
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                        <span className="text-blue-600 text-sm font-medium">
-                        {prof.tipo}
-                        </span>
-                          <button className="text-gray-400 hover:text-red-500 transition-colors">
-                            <Heart className="h-5 w-5" />
-                          </button>
+                  )}
+                  <div className="p-6">
+                    {/* Keep the header section as is */}
+                    <div className="flex space-x-4 h-36"> {/* Altura fixa definida */}
+                      {prof.foto ? (
+                        <img
+                          src={prof.foto}
+                          alt={prof.nome}
+                          className="h-20 w-20 rounded-full object-cover border-2 border-gray-100 flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0">
+                          <User className="h-8 w-8 text-blue-600" />
                         </div>
-                        <h3 className="font-semibold text-gray-900">{prof.nome}</h3>
-                        <p className="text-sm text-gray-600">{prof.registro}</p>
-                        {/* Adicionando especialização abaixo do nome */}
-                        <p className="text-sm text-gray-600 mt-1">
-                        {Array.isArray(prof.especializacao) 
+                      )}
+                      <div className="flex-1 min-w-0"> {/* min-w-0 permite que o texto quebre corretamente */}
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-blue-600 text-sm font-medium truncate">
+                            {prof.tipo}
+                          </span>
+                          <div className="flex items-center gap-0.5">
+                            <Medal className="h-4 w-4 text-yellow-400" />
+                            <CheckCircle2 className="h-3.5 w-3.5 text-blue-500" />
+                          </div>
+                        </div>
+                        <h3 className="font-semibold text-gray-900 truncate">
+                          {formatarNome(prof.nome)}
+                        </h3>
+                        <p className="text-sm text-gray-600 truncate">{prof.registro}</p>
+                        <p className="text-sm text-gray-600 mt-1 line-clamp-3"> {/* Limita a 2 linhas */}
+                          {Array.isArray(prof.especializacao) 
                             ? prof.especializacao.join(', ') 
                             : prof.especializacao}
                         </p>
                       </div>
                     </div>
 
-                    {/* Formação */}
-                    <div className="mt-4">
-                      <div className="flex items-center mb-2">
-                        <BookOpen className="text-blue-600 mr-2 h-5 w-5" />
-                        <span className="font-medium text-gray-700">Formação</span>
-                      </div>
-                      <div className="pl-7 space-y-1">
+                    {/* Replace static sections with CollapsibleSection */}
+                    <CollapsibleSection 
+                      prof={prof}
+                      sectionKey="formacao"
+                      icon={BookOpen}
+                      title="Formação"
+                    >
+                      <div className="space-y-1">
                         {prof.graduacao?.map((grad, index) => (
                           <p key={index} className="text-sm text-gray-600">{grad}</p>
                         ))}
@@ -428,49 +509,47 @@ const MarketplacePage = () => {
                           <p key={index} className="text-sm text-gray-600">{pos}</p>
                         ))}
                       </div>
-                    </div>
+                    </CollapsibleSection>
 
-                    {/* Cursos e Certificações */}
-                    <div className="mt-4">
-                      <div className="flex items-center mb-2">
-                        <Award className="text-blue-600 mr-2 h-5 w-5" />
-                        <span className="font-medium text-gray-700">Cursos e Certificações</span>
-                      </div>
-                      <div className="pl-7">
-                        <ul className="list-disc list-inside space-y-1">
-                          {prof.cursos?.map((curso, index) => (
-                            <li key={index} className="text-sm text-gray-600">
-                              {curso}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
+                    <CollapsibleSection 
+                      prof={prof}
+                      sectionKey="cursos"
+                      icon={Award}
+                      title="Cursos e Certificações"
+                    >
+                      <ul className="list-disc list-inside space-y-1">
+                        {prof.cursos?.map((curso, index) => (
+                          <li key={index} className="text-sm text-gray-600">
+                            {curso}
+                          </li>
+                        ))}
+                      </ul>
+                    </CollapsibleSection>
 
-                    {/* Áreas de Atuação */}
-                    <div className="mt-4">
-                      <div className="flex items-center mb-2">
-                        <Award className="text-blue-600 mr-2 h-5 w-5" />
-                        <span className="font-medium text-gray-700">Áreas de Atuação</span>
-                      </div>
+                    <CollapsibleSection 
+                      prof={prof}
+                      sectionKey="atuacao"
+                      icon={Award}
+                      title="Áreas de Atuação"
+                    >
                       <div className="flex flex-wrap gap-2">
-                      {prof.atuacao?.map((area, index) => (
-                        <span
+                        {prof.atuacao?.map((area, index) => (
+                          <span
                             key={index}
                             className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm"
-                        >
+                          >
                             {area}
-                        </span>
+                          </span>
                         ))}
                       </div>
-                    </div>
+                    </CollapsibleSection>
 
-                    {/* Convênios */}
-                    <div className="mt-4">
-                      <div className="flex items-center mb-2">
-                        <DollarSign className="text-blue-600 mr-2 h-5 w-5" />
-                        <span className="font-medium text-gray-700">Convênios</span>
-                      </div>
+                    <CollapsibleSection 
+                      prof={prof}
+                      sectionKey="convenios"
+                      icon={DollarSign}
+                      title="Convênios"
+                    >
                       <div className="flex flex-wrap gap-2">
                         {prof.planos?.map((plano, index) => (
                           <span
@@ -481,33 +560,58 @@ const MarketplacePage = () => {
                           </span>
                         ))}
                       </div>
-                    </div>
+                    </CollapsibleSection>
 
-                    {/* Formas de Atendimento - Adicionando o título */}
-                    <div className="mt-4">
-                    <div className="flex items-center mb-2">
-                        <User className="text-blue-600 mr-2 h-5 w-5" />
-                        <span className="font-medium text-gray-700">Formas de Atendimento</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
+                    <CollapsibleSection 
+                      prof={prof}
+                      sectionKey="atendimento"
+                      icon={User}
+                      title="Formas de Atendimento"
+                    >
+                      <div className="flex flex-wrap gap-2">
                         {prof.atendimentoonline && (
-                        <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm">
+                          <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm">
                             Online
-                        </span>
+                          </span>
                         )}
                         {prof.atendimentopresencial && (
-                        <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
+                          <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
                             Presencial
-                        </span>
+                          </span>
                         )}
                         {prof.atendimentoemergencia && (
-                        <span className="px-3 py-1 bg-red-50 text-red-700 rounded-full text-sm">
+                          <span className="px-3 py-1 bg-red-50 text-red-700 rounded-full text-sm">
                             Emergência
-                        </span>
+                          </span>
                         )}
-                    </div>
-                    </div>
-                    {/* Footer com avaliação e valor */}
+                      </div>
+                    </CollapsibleSection>
+
+                    {/* Nova seção de Faixa Etária */}
+                    <CollapsibleSection 
+                      prof={prof}
+                      sectionKey="faixaEtaria"
+                      icon={Users}
+                      title="Faixa Etária"
+                    >
+                      <div className="flex flex-wrap gap-2">
+                        {prof.faixa_etaria?.map((faixa, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm"
+                          >
+                            {faixa}
+                          </span>
+                        ))}
+                        {!prof.faixa_etaria || prof.faixa_etaria.length === 0 && (
+                          <span className="text-sm text-gray-500">
+                            Não especificado
+                          </span>
+                        )}
+                      </div>
+                    </CollapsibleSection>
+
+                    {/* Keep the footer section as is */}
                     <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
                       <div className="flex items-center">
                         <Star className="h-5 w-5 text-yellow-400" />
@@ -523,7 +627,7 @@ const MarketplacePage = () => {
                       </div>
                     </div>
 
-                    {/* Botão de contato */}
+                    {/* Keep the contact button section as is */}
                     <div className="mt-4">
                       <button 
                         onClick={() => setSelectedProfContact(
@@ -559,7 +663,18 @@ const MarketplacePage = () => {
               ))}
             </div>
           </div>
+          
+          {/* Coluna Lateral Direita - Nova */}
+          <div className="space-y-6">
+            {/* Card de Profissionais em Destaque */}
 
+              {/* Adicione o novo componente */}
+              <SideComponents 
+                profissionais={profissionais}
+                profissionaisFiltrados={profissionaisFiltrados}
+              />
+
+          </div>
         </div>
       </div>
 
