@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Search, Filter, User, BookOpen, Trophy,
   DollarSign, Award, Star, Phone, LayoutDashboard,
-  ChevronDown, ChevronUp, Users , CheckCircle2, Medal
+  ChevronDown, ChevronUp, Users , CheckCircle, Medal
 } from 'lucide-react';
 import ServianLogoText from '../components/ServianLogoText';
 import SideComponents from '../components/SideComponents';
@@ -25,20 +25,34 @@ const MarketplacePage = () => {
     notaMinima: '',
     valorMin: '',
     valorMax: '',
-    tiposAtendimento: []
+    tiposAtendimento: [],
+    faixaEtaria: [], // novo
+    sexo: '', // novo
+    estado: '', // novo
+    cidade: '' // novo
   });
 
   // Arrays para os selects
   const [todasCategorias, setTodasCategorias] = useState([]);
   const [todasAtuacoes, setTodasAtuacoes] = useState([]);
   const [todosConvenios, setTodosConvenios] = useState([]);
+  const [estados, setEstados] = useState([]);
+  const [cidades, setCidades] = useState([]);
 
   // Tipos de atendimento constantes
   const todosTiposAtendimento = [
-    { id: 'atendimentoOnline', label: 'Atendimento Online' },
-    { id: 'atendimentoEmergencia', label: 'Atendimento de Emergência' },
-    { id: 'atendimentoPresencial', label: 'Atendimento Presencial' }
+    { id: 'atendimentoonline', label: 'Atendimento Online' },
+    { id: 'atendimentoemergencia', label: 'Atendimento de Emergência' },
+    { id: 'atendimentopresencial', label: 'Atendimento Presencial' }
   ];
+
+  // Adicione as faixas etárias disponíveis
+const faixasEtariasDisponiveis = [
+  "crianças",
+  "adolescentes",
+  "adultos",
+  "idosos"
+];
 
   // Add this helper function to toggle sections
   const toggleSection = (profId, section) => {
@@ -163,6 +177,28 @@ const MarketplacePage = () => {
         filtros.tiposAtendimento.every(tipo => p[tipo])
       );
     }
+
+    // Filtro por faixa etária
+    if (filtros.faixaEtaria.length > 0) {
+      resultado = resultado.filter(p =>
+        filtros.faixaEtaria.some(faixa => p.faixa_etaria?.includes(faixa))
+      );
+    }
+
+    // Filtro por sexo
+    if (filtros.sexo) {
+      resultado = resultado.filter(p => p.sexo === filtros.sexo);
+    }
+
+    // Filtro por estado
+    if (filtros.estado) {
+      resultado = resultado.filter(p => p.estado === filtros.estado);
+    }
+
+    // Filtro por cidade
+    if (filtros.cidade) {
+      resultado = resultado.filter(p => p.cidade === filtros.cidade);
+    }
   
     setProfissionaisFiltrados(resultado);
   }, [profissionais, filtros, busca]); // dependências do useEffect
@@ -180,6 +216,11 @@ const MarketplacePage = () => {
         setTodasCategorias(Array.from(new Set(data.map(p => p.tipo))));
         setTodasAtuacoes(Array.from(new Set(data.flatMap(p => p.atuacao))));
         setTodosConvenios(Array.from(new Set(data.flatMap(p => p.planos))));
+        
+        // Preencher estados e cidades únicos
+        setEstados(Array.from(new Set(data.map(p => p.estado).filter(Boolean))));
+        setCidades(Array.from(new Set(data.map(p => p.cidade).filter(Boolean))));
+
       } catch (error) {
         console.error('Erro ao buscar profissionais:', error);
       }
@@ -198,7 +239,11 @@ const MarketplacePage = () => {
       notaMinima: '',
       valorMin: '',
       valorMax: '',
-      tiposAtendimento: []
+      tiposAtendimento: [],
+      faixaEtaria: [], // novo
+      sexo: '', // novo
+      estado: '', // novo
+      cidade: '' // novo
     });
   };
 
@@ -405,7 +450,7 @@ const MarketplacePage = () => {
                   {/* Tipo de Atendimento */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tipo de Atendimento
+                      Formas de Atendimento
                     </label>
                     <div className="space-y-2">
                       {todosTiposAtendimento.map(tipo => (
@@ -428,6 +473,103 @@ const MarketplacePage = () => {
                         </label>
                       ))}
                     </div>
+                  </div>
+
+                  {/* Filtro de Faixa Etária */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Faixa Etária
+                    </label>
+                    <select
+                      multiple
+                      value={filtros.faixaEtaria}
+                      onChange={(e) =>
+                        setFiltros(prev => ({
+                          ...prev,
+                          faixaEtaria: Array.from(
+                            e.target.selectedOptions,
+                            option => option.value
+                          )
+                        }))
+                      }
+                      className="w-full rounded-lg border border-gray-300 p-2.5"
+                    >
+                      {faixasEtariasDisponiveis.map(faixa => (
+                        <option key={faixa} value={faixa}>{faixa}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filtro de Sexo */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sexo
+                    </label>
+                    <select
+                      value={filtros.sexo}
+                      onChange={(e) =>
+                        setFiltros(prev => ({
+                          ...prev,
+                          sexo: e.target.value
+                        }))
+                      }
+                      className="w-full rounded-lg border border-gray-300 p-2.5"
+                    >
+                      <option value="">Todos</option>
+                      <option value="M">Masculino</option>
+                      <option value="F">Feminino</option>
+                    </select>
+                  </div>
+
+                  {/* Filtro de Estado */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Estado
+                    </label>
+                    <select
+                      value={filtros.estado}
+                      onChange={(e) => {
+                        setFiltros(prev => ({
+                          ...prev,
+                          estado: e.target.value,
+                          cidade: '' // Limpa a cidade quando muda o estado
+                        }))
+                      }}
+                      className="w-full rounded-lg border border-gray-300 p-2.5"
+                    >
+                      <option value="">Todos</option>
+                      {estados.map(estado => (
+                        <option key={estado} value={estado}>{estado}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filtro de Cidade */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cidade
+                    </label>
+                    <select
+                      value={filtros.cidade}
+                      onChange={(e) =>
+                        setFiltros(prev => ({
+                          ...prev,
+                          cidade: e.target.value
+                        }))
+                      }
+                      disabled={!filtros.estado}
+                      className="w-full rounded-lg border border-gray-300 p-2.5"
+                    >
+                      <option value="">Todas</option>
+                      {cidades
+                        .filter(cidade => {
+                          const prof = profissionais.find(p => p.cidade === cidade);
+                          return prof && prof.estado === filtros.estado;
+                        })
+                        .map(cidade => (
+                          <option key={cidade} value={cidade}>{cidade}</option>
+                        ))}
+                    </select>
                   </div>
                 </div>
 
@@ -478,8 +620,8 @@ const MarketplacePage = () => {
                             {prof.tipo}
                           </span>
                           <div className="flex items-center gap-0.5">
-                            <Medal className="h-4 w-4 text-yellow-400" />
-                            <CheckCircle2 className="h-3.5 w-3.5 text-blue-500" />
+                            <Medal className="h-5 w-5 text-yellow-400" />
+                            <CheckCircle className="h-4 w-4 text-blue-500" />
                           </div>
                         </div>
                         <h3 className="font-semibold text-gray-900 truncate">

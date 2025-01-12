@@ -1,6 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Plus } from 'lucide-react';
+
+const bairrosBrasilia = [
+  "Asa Norte",
+  "Asa Sul",
+  "Lago Norte",
+  "Lago Sul",
+  "Sudoeste",
+  "Noroeste",
+  "Águas Claras",
+  "Taguatinga",
+  "Guará",
+  "Cruzeiro",
+  "Octogonal",
+  "Park Sul",
+  "Ceilândia",
+  "Samambaia",
+  "Gama",
+  "Planaltina",
+  "Sobradinho",
+  "Sobradinho II",
+  "Núcleo Bandeirante",
+  "Jardim Botânico",
+  "Vicente Pires"
+].sort();
 
 
 // Registration Modal Component
@@ -9,6 +33,73 @@ const CadastroModal = ({ onClose }) => {
     const [isSuccess, setIsSuccess] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [estados, setEstados] = useState([]);
+    const [cidades, setCidades] = useState([]);
+
+    // Função para renderizar campo de bairro
+    const renderBairroField = () => {
+      if (formData.estado === 'DF') {
+        return (
+          <div className="col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Região Administrativa
+            </label>
+            <select
+              value={formData.bairro}
+              onChange={(e) => setFormData(prev => ({ ...prev, bairro: e.target.value }))}
+              className="w-full rounded-lg border border-gray-300 p-2.5"
+            >
+              <option value="">Selecione a região...</option>
+              {bairrosBrasilia.map((bairro) => (
+                <option key={bairro} value={bairro}>
+                  {bairro}
+                </option>
+              ))}
+            </select>
+          </div>
+        );
+      }
+
+      return (
+        <div className="col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Bairro
+          </label>
+          <input
+            type="text"
+            value={formData.bairro}
+            onChange={(e) => setFormData(prev => ({ ...prev, bairro: e.target.value }))}
+            className="w-full rounded-lg border border-gray-300 p-2.5"
+            placeholder="Digite seu bairro"
+          />
+        </div>
+      );
+    };
+
+    // Carregar estados
+    useEffect(() => {
+      fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados')
+        .then(response => response.json())
+        .then(data => {
+          const estadosOrdenados = data.sort((a, b) => a.nome.localeCompare(b.nome));
+          setEstados(estadosOrdenados);
+        });
+    }, []);
+
+    // Carregar cidades quando um estado for selecionado
+    const carregarCidades = (uf) => {
+      if (!uf) {
+        setCidades([]);
+        return;
+      }
+      
+      fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`)
+        .then(response => response.json())
+        .then(data => {
+          const cidadesOrdenadas = data.sort((a, b) => a.nome.localeCompare(b.nome));
+          setCidades(cidadesOrdenadas);
+        });
+    };
   
     const [lgpdConsent, setLgpdConsent] = useState({
       dataProcessing: false,
@@ -34,7 +125,12 @@ const CadastroModal = ({ onClose }) => {
       atendimentoemergencia: false,
       atendimentopresencial: false,
       faixa_etaria: [''],
-      status: 'pending'
+      status: 'pending',
+      instagram: '',         // novo campo
+      sexo: '',             // novo campo
+      bairro: '',           // novo campo
+      cidade: '',           // novo campo
+      estado: ''            // novo campo
     });
   
     const handlePhotoUpload = async (event) => {
@@ -131,6 +227,11 @@ const CadastroModal = ({ onClose }) => {
           atuacao: formData.atuacao.filter(item => item.trim() !== ''),
           valor: formData.valor === '' || isNaN(formData.valor) ? 0 : Number(formData.valor),
           planos: formData.planos.filter(item => item.trim() !== ''),
+          instagram: formData.instagram.trim(),
+          sexo: formData.sexo,
+          bairro: formData.bairro.trim(),
+          cidade: formData.cidade.trim(),
+          estado: formData.estado,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           lgpdConsent: {
@@ -303,6 +404,39 @@ const CadastroModal = ({ onClose }) => {
                   />
                 </div>
   
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Instagram
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                      @
+                    </span>
+                    <input
+                      type="text"
+                      value={formData.instagram}
+                      onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.value }))}
+                      className="w-full rounded-lg border border-gray-300 p-2.5 pl-8"
+                      placeholder="seu.perfil"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Sexo
+                  </label>
+                  <select
+                    value={formData.sexo}
+                    onChange={(e) => setFormData(prev => ({ ...prev, sexo: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-300 p-2.5"
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Feminino</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Registro Profissional
@@ -816,6 +950,58 @@ const CadastroModal = ({ onClose }) => {
                   </div>
                 </div>
               </div>
+              {/* Localização */}
+              <div className="col-span-2 mt-6">
+              <h3 className="text-lg font-medium mb-4">Localização do Atendimento</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Estado
+                  </label>
+                  <select
+                    value={formData.estado}
+                    onChange={(e) => {
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        estado: e.target.value, 
+                        cidade: '',
+                        bairro: '' // Limpa o bairro quando muda o estado
+                      }));
+                      carregarCidades(e.target.value);
+                    }}
+                    className="w-full rounded-lg border border-gray-300 p-2.5"
+                  >
+                    <option value="">Selecione o estado...</option>
+                    {estados.map((estado) => (
+                      <option key={estado.id} value={estado.sigla}>
+                        {estado.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Cidade
+                  </label>
+                  <select
+                    value={formData.cidade}
+                    onChange={(e) => setFormData(prev => ({ ...prev, cidade: e.target.value }))}
+                    disabled={!formData.estado}
+                    className="w-full rounded-lg border border-gray-300 p-2.5"
+                  >
+                    <option value="">Selecione a cidade...</option>
+                    {cidades.map((cidade) => (
+                      <option key={cidade.id} value={cidade.nome}>
+                        {cidade.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {renderBairroField()}
+              </div>
+            </div>
             </div>
           );
         case 5:

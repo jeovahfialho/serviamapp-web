@@ -1,7 +1,7 @@
 // Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, User, Plus, LogOut, Calendar, Users, Clock, AlertCircle, ChevronUp, Activity } from 'lucide-react';
+import { Menu, User, ChevronDown, LogOut, Calendar, Users, Clock, AlertCircle, ChevronUp, Activity } from 'lucide-react';
 import ServianLogoText from '../components/ServianLogoText';
 import ServianLogo from '../components/ServianLogo';
 import CadastroModal from '../components/CadastroModal';
@@ -9,6 +9,11 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [profissionais, setProfissionais] = useState([]);
+  const [expandedRows, setExpandedRows] = useState(new Set()); 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mostrarCadastro, setMostrarCadastro] = useState(false);
   const [userData, setUserData] = useState({
@@ -27,6 +32,179 @@ const Dashboard = () => {
       totalReviews: 42
     }
   });
+
+  // Função para verificar se é admin
+  const checkIsAdmin = (userPhone) => {
+    return userPhone === '61981733598';
+  };
+
+  const ActionMenu = () => {
+    const [isOpen, setIsOpen] = useState(false);
+  
+    const handleAction = async (action) => {
+      const selectedIds = Array.from(selectedRows);
+      if (selectedIds.length === 0) {
+        alert('Selecione ao menos um profissional');
+        return;
+      }
+  
+      switch(action) {
+        case 'aprovar':
+          for (let id of selectedIds) {
+            await updateStatus(id, 'approved');
+          }
+          break;
+        case 'rejeitar':
+          for (let id of selectedIds) {
+            await updateStatus(id, 'rejected');
+          }
+          break;
+        case 'verificar':
+          for (let id of selectedIds) {
+            await toggleVerificado(id, false);
+          }
+          break;
+        case 'desverificar':
+          for (let id of selectedIds) {
+            await toggleVerificado(id, true);
+          }
+          break;
+      }
+  
+      setSelectedRows(new Set()); // Limpa seleção após ação
+      setIsOpen(false);
+    };
+  
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          disabled={selectedRows.size === 0}
+          className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
+            selectedRows.size === 0 
+              ? 'bg-gray-100 text-gray-400' 
+              : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+          }`}
+        >
+          <span>Ações ({selectedRows.size})</span>
+          <ChevronDown size={16} />
+        </button>
+  
+        {isOpen && (
+          <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg z-50 w-48">
+            <button
+              onClick={() => handleAction('aprovar')}
+              className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm text-green-600"
+            >
+              Aprovar Selecionados
+            </button>
+            <button
+              onClick={() => handleAction('rejeitar')}
+              className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm text-red-600"
+            >
+              Rejeitar Selecionados
+            </button>
+            <button
+              onClick={() => handleAction('verificar')}
+              className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm text-blue-600"
+            >
+              Verificar Selecionados
+            </button>
+            <button
+              onClick={() => handleAction('desverificar')}
+              className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm text-gray-600"
+            >
+              Remover Verificação
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const updateStatus = async (id, newStatus) => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch('https://serviamapp-server.vercel.app/api/profissionais', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          id,
+          status: newStatus
+        })
+      });
+  
+      if (!response.ok) throw new Error('Erro ao atualizar status');
+      
+      // Recarrega a lista de profissionais
+      fetchProfissionais();
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      alert('Erro ao atualizar status');
+    }
+  };
+  
+  const toggleVerificado = async (id, currentStatus) => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch('https://serviamapp-server.vercel.app/api/profissionais', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          id,
+          verificado: !currentStatus
+        })
+      });
+  
+      if (!response.ok) throw new Error('Erro ao atualizar verificação');
+      
+      // Recarrega a lista de profissionais
+      fetchProfissionais();
+    } catch (error) {
+      console.error('Erro ao atualizar verificação:', error);
+      alert('Erro ao atualizar verificação');
+    }
+  };
+
+  // Função para buscar profissionais
+  const fetchProfissionais = async () => {
+    if (!isAdmin) return;
+    
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch('https://serviamapp-server.vercel.app/api/profissionais?isAdmin=true', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Erro ao carregar profissionais');
+      
+      const data = await response.json();
+      setProfissionais(data);
+    } catch (error) {
+      console.error('Erro ao carregar profissionais:', error);
+    }
+  };
+
+  // Função para expandir/recolher uma linha
+  const toggleRow = (id) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -48,6 +226,9 @@ const Dashboard = () => {
           email: data.email || '',
           cpf: data.cpf || ''
         }));
+
+        // Verificar se é admin
+        setIsAdmin(checkIsAdmin(data.telefone));
   
       } catch (error) {
         console.error('Erro:', error);
@@ -58,22 +239,37 @@ const Dashboard = () => {
     loadUserData();
   }, [navigate]);
 
-  const getStatusColor = (status) => {
-    const statusColors = {
-      pending: 'bg-yellow-500',
-      approved: 'bg-green-500',
-      rejected: 'bg-red-500'
-    };
-    return statusColors[status] || 'bg-gray-500';
-  };
+  // Segundo useEffect - novo, para carregar profissionais
+  useEffect(() => {
+    if (isAdmin) {
+      fetchProfissionais();
+    }
+  }, [isAdmin]);
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-500';
+      case 'approved':
+        return 'bg-green-500';
+      case 'rejected':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+  
   const getStatusText = (status) => {
-    const statusText = {
-      pending: 'Pendente',
-      approved: 'Aprovado',
-      rejected: 'Rejeitado'
-    };
-    return statusText[status] || 'Desconhecido';
+    switch (status) {
+      case 'pending':
+        return 'Pendente';
+      case 'approved':
+        return 'Aprovado';
+      case 'rejected':
+        return 'Rejeitado';
+      default:
+        return 'Desconhecido';
+    }
   };
 
   const isProfileIncomplete = !userData.email || !userData.cpf;
@@ -148,6 +344,155 @@ const Dashboard = () => {
                   Completar cadastro →
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Seção Admin */}
+        {isAdmin && (
+          <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
+            <h3 className="text-lg font-semibold mb-4">Lista de Profissionais</h3>
+            <ActionMenu />
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3">
+                      <input
+                        type="checkbox"
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedRows(new Set(profissionais.map(p => p.id)));
+                          } else {
+                            setSelectedRows(new Set());
+                          }
+                        }}
+                        checked={selectedRows.size === profissionais.length && profissionais.length > 0}
+                        className="rounded border-gray-300 text-blue-600"
+                      />
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Nome
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Categoria
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Instagram
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Áreas de Atuação
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Verificado
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {profissionais.map((prof) => (
+                    <React.Fragment key={prof.id}>
+                      <tr 
+                        className="hover:bg-gray-50 cursor-pointer"
+                        
+                      >
+                        <td className="px-6 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedRows.has(prof.id)}
+                            onChange={(e) => {
+                              const newSelected = new Set(selectedRows);
+                              if (e.target.checked) {
+                                newSelected.add(prof.id);
+                              } else {
+                                newSelected.delete(prof.id);
+                              }
+                              setSelectedRows(newSelected);
+                            }}
+                            className="rounded border-gray-300 text-blue-600"
+                          />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap" onClick={() => toggleRow(prof.id)}>
+                          <div className="flex items-center">
+                            <div className="text-sm font-medium text-gray-900">{prof.nome}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {prof.tipo}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {prof.instagram}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-1">
+                            {prof.atuacao?.map((area, idx) => (
+                              <span 
+                                key={idx}
+                                className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded"
+                              >
+                                {area}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            prof.verificado ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {prof.verificado ? 'Sim' : 'Não'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(prof.status)} text-white`}>
+                            {getStatusText(prof.status)}
+                          </span>
+                        </td>
+                      </tr>
+                      {expandedRows.has(prof.id) && (
+                        <tr className="bg-gray-50">
+                          <td colSpan="6" className="px-6 py-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="font-medium">Dados Pessoais</p>
+                                <p className="text-sm">Email: {prof.email}</p>
+                                <p className="text-sm">Telefone: {prof.telefone}</p>
+                                <p className="text-sm">CPF: {prof.cpf}</p>
+                              </div>
+                              <div>
+                                <p className="font-medium">Localização</p>
+                                <p className="text-sm">Cidade: {prof.cidade}</p>
+                                <p className="text-sm">Estado: {prof.estado}</p>
+                                <p className="text-sm">Bairro: {prof.bairro}</p>
+                              </div>
+                              <div>
+                                <p className="font-medium">Formação</p>
+                                <div className="text-sm">
+                                  <p className="font-medium text-sm mt-1">Graduação:</p>
+                                  {prof.graduacao?.map((grad, idx) => (
+                                    <p key={idx}>{grad}</p>
+                                  ))}
+                                  <p className="font-medium text-sm mt-1">Pós-Graduação:</p>
+                                  {prof.pos_graduacao?.map((pos, idx) => (
+                                    <p key={idx}>{pos}</p>
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <p className="font-medium">Especializações</p>
+                                {prof.especializacao?.map((esp, idx) => (
+                                  <p key={idx} className="text-sm">{esp}</p>
+                                ))}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
