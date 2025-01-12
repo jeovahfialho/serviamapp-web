@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Award, Star, Users, Medal, Quote, ArrowRight, Trophy, 
-  Percent, Brain, ChevronRight, Tag, CircleDollarSign 
+  Percent, Brain, CheckCircle, ShieldCheck 
 } from 'lucide-react';
 
 const SideComponents = ({ profissionais = [], profissionaisFiltrados = [] }) => {
@@ -74,56 +74,6 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [] }) => 
         </div>
       </div>
 
-      {/* Promoções Ativas */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        <h3 className="font-semibold text-lg mb-4 flex items-center">
-          <Percent className="h-5 w-5 text-green-500 mr-2" />
-          Promoções Ativas
-        </h3>
-        <div className="space-y-3">
-          {/* Primeira Consulta 
-          <div className="group relative bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl cursor-pointer hover:shadow-md transition-all">
-            <div className="absolute top-2 right-2">
-              <Tag className="h-5 w-5 text-green-500" />
-            </div>
-            <h4 className="font-medium text-green-700">Primeira Consulta</h4>
-            <p className="text-2xl font-bold text-green-600 mb-1">20% OFF</p>
-            <p className="text-sm text-green-600">Consultar Profissional</p>
-            <div className="mt-2 flex items-center text-xs text-green-600">
-              <span>Ver detalhes</span>
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </div>
-          </div>
-
-          <div className="group relative bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl cursor-pointer hover:shadow-md transition-all">
-            <div className="absolute top-2 right-2">
-              <Users className="h-5 w-5 text-blue-500" />
-            </div>
-            <h4 className="font-medium text-blue-700">Pacote Família</h4>
-            <p className="text-2xl font-bold text-blue-600 mb-1">30% OFF</p>
-            <p className="text-sm text-blue-600">Para 3 ou mais pessoas</p>
-            <div className="mt-2 flex items-center text-xs text-blue-600">
-              <span>Ver detalhes</span>
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </div>
-          </div>
-
-          <div className="group relative bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl cursor-pointer hover:shadow-md transition-all">
-            <div className="absolute top-2 right-2">
-              <CircleDollarSign className="h-5 w-5 text-purple-500" />
-            </div>
-            <h4 className="font-medium text-purple-700">Oferta Relâmpago</h4>
-            <p className="text-lg font-bold text-purple-600 mb-1">Consulta + Retorno</p>
-            <p className="text-sm text-purple-600">Válido apenas hoje!</p>
-            <div className="mt-2 flex items-center text-xs text-purple-600">
-              <span>Ver detalhes</span>
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </div>
-          </div>
-          */}
-        </div>
-      </div>
-
       {/* Quiz de Saúde */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h3 className="font-semibold text-lg mb-4 flex items-center">
@@ -181,57 +131,57 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [] }) => 
       {/* Card de Conquistas da Plataforma */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h3 className="font-semibold text-lg mb-4 flex items-center">
-          <Trophy className="h-5 w-5 text-yellow-500 mr-2" />
-          Conquistas da Plataforma
+            <Trophy className="h-5 w-5 text-yellow-500 mr-2" />
+            Conquistas da Plataforma
         </h3>
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-blue-50 rounded-xl p-4 text-center">
+            <div className="bg-blue-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
-              <Users className="h-8 w-8 text-blue-500" />
+                <CheckCircle className="h-8 w-8 text-blue-500" />
             </div>
             <div className="text-2xl font-bold text-blue-700">
-              {calculaEstatisticas.totalConsultas.toLocaleString()}
+                {profissionais.filter(prof => prof.status === 'approved').length}
             </div>
             <div className="text-sm text-blue-600">
-              Consultas Realizadas
+                Profissionais Aprovados
             </div>
-          </div>
+            </div>
 
-          <div className="bg-green-50 rounded-xl p-4 text-center">
+            <div className="bg-green-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
-              <Star className="h-8 w-8 text-green-500" />
+                <Star className="h-8 w-8 text-green-500" />
             </div>
             <div className="text-2xl font-bold text-green-700">
-              {calculaEstatisticas.satisfacaoMedia.toFixed(1)}
+                {calculaEstatisticas.satisfacaoMedia.toFixed(1)}
             </div>
             <div className="text-sm text-green-600">
-              Satisfação Média
+                Satisfação Média
             </div>
-          </div>
+            </div>
 
-          <div className="bg-purple-50 rounded-xl p-4 text-center">
+            <div className="bg-yellow-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
-              <Medal className="h-8 w-8 text-purple-500" />
+                <Medal className="h-8 w-8 text-yellow-500" />
             </div>
-            <div className="text-2xl font-bold text-purple-700">
-              {calculaEstatisticas.profissionaisVerificados}
+            <div className="text-2xl font-bold text-yellow-700">
+                {profissionais.filter(prof => prof.verificado).length}
             </div>
-            <div className="text-sm text-purple-600">
-              Profissionais Verificados
+            <div className="text-sm text-yellow-600">
+                Profissionais Verificados
             </div>
-          </div>
+            </div>
 
-          <div className="bg-orange-50 rounded-xl p-4 text-center">
+            <div className="bg-orange-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
-              <Award className="h-8 w-8 text-orange-500" />
+                <Award className="h-8 w-8 text-orange-500" />
             </div>
             <div className="text-2xl font-bold text-orange-700">
-              {calculaEstatisticas.especialidadesUnicas}
+                {calculaEstatisticas.especialidadesUnicas}
             </div>
             <div className="text-sm text-orange-600">
-              Especialidades
+                Especialidades
             </div>
-          </div>
+            </div>
         </div>
       </div>
 
@@ -285,6 +235,56 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [] }) => 
                 </div>
               </div>
             ))}
+        </div>
+      </div>
+
+      {/* Promoções Ativas */}
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <h3 className="font-semibold text-lg mb-4 flex items-center">
+          <Percent className="h-5 w-5 text-green-500 mr-2" />
+          Promoções Ativas
+        </h3>
+        <div className="space-y-3">
+          {/* Primeira Consulta 
+          <div className="group relative bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl cursor-pointer hover:shadow-md transition-all">
+            <div className="absolute top-2 right-2">
+              <Tag className="h-5 w-5 text-green-500" />
+            </div>
+            <h4 className="font-medium text-green-700">Primeira Consulta</h4>
+            <p className="text-2xl font-bold text-green-600 mb-1">20% OFF</p>
+            <p className="text-sm text-green-600">Consultar Profissional</p>
+            <div className="mt-2 flex items-center text-xs text-green-600">
+              <span>Ver detalhes</span>
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </div>
+          </div>
+
+          <div className="group relative bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl cursor-pointer hover:shadow-md transition-all">
+            <div className="absolute top-2 right-2">
+              <Users className="h-5 w-5 text-blue-500" />
+            </div>
+            <h4 className="font-medium text-blue-700">Pacote Família</h4>
+            <p className="text-2xl font-bold text-blue-600 mb-1">30% OFF</p>
+            <p className="text-sm text-blue-600">Para 3 ou mais pessoas</p>
+            <div className="mt-2 flex items-center text-xs text-blue-600">
+              <span>Ver detalhes</span>
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </div>
+          </div>
+
+          <div className="group relative bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl cursor-pointer hover:shadow-md transition-all">
+            <div className="absolute top-2 right-2">
+              <CircleDollarSign className="h-5 w-5 text-purple-500" />
+            </div>
+            <h4 className="font-medium text-purple-700">Oferta Relâmpago</h4>
+            <p className="text-lg font-bold text-purple-600 mb-1">Consulta + Retorno</p>
+            <p className="text-sm text-purple-600">Válido apenas hoje!</p>
+            <div className="mt-2 flex items-center text-xs text-purple-600">
+              <span>Ver detalhes</span>
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </div>
+          </div>
+          */}
         </div>
       </div>
     </div>
