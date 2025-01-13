@@ -6,11 +6,13 @@ import Marketplace from './pages/Marketplace';
 import SignUpPage from './pages/SignUpPage'; 
 import ProtectedRoute from './components/ProtectedRoute';
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react"
 
 const App = () => {
   return (
     <Router>
       <SpeedInsights />
+      <Analytics />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUpPage />} />
