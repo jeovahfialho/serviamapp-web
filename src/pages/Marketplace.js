@@ -7,8 +7,12 @@ import {
 } from 'lucide-react';
 import ServianLogoText from '../components/ServianLogoText';
 import SideComponents from '../components/SideComponents';
+import { Analytics } from "@vercel/analytics/react"
+
 
 const MarketplacePage = () => {
+
+  <Analytics />
   const navigate = useNavigate();
   const [profissionais, setProfissionais] = useState([]);
   const [profissionaisFiltrados, setProfissionaisFiltrados] = useState([]);

@@ -6,8 +6,11 @@ import ServianLogoText from '../components/ServianLogoText';
 import ServianLogo from '../components/ServianLogo';
 import CadastroModal from '../components/CadastroModal';
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react"
 
 const Dashboard = () => {
+
+  <Analytics />
   const navigate = useNavigate();
 
   const [selectedRows, setSelectedRows] = useState(new Set());
