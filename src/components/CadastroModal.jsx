@@ -32,7 +32,7 @@ const CadastroModal = ({ onClose }) => {
     const [step, setStep] = useState(1);
     const [isSuccess, setIsSuccess] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
+    const [, setIsUploading] = useState(false);
     const [estados, setEstados] = useState([]);
     const [cidades, setCidades] = useState([]);
 
