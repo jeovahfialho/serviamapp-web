@@ -1,9 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard'; // Seu dashboard atual
-import Marketplace from './pages/Marketplace'; 
-import SignUpPage from './pages/SignUpPage'; 
+import Dashboard from './pages/Dashboard';
+import Marketplace from './pages/Marketplace';
+import SignUpPage from './pages/SignUpPage';
+import ProfessionalPage from './pages/ProfessionalPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react"
@@ -22,6 +23,7 @@ const App = () => {
           </ProtectedRoute>
         } />
         <Route path="/marketplace" element={<Marketplace />} />
+        <Route path="/profissional/:id" element={<ProfessionalPage />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

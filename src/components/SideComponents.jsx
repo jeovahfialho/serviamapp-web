@@ -61,7 +61,11 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
             .filter(prof => prof.pontuacao >= 4.8)
             .slice(0, 3)
             .map(prof => (
-              <div key={prof.id} className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+              <a 
+                key={prof.id}
+                href={`/profissional/${prof.id}`}
+                className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer block"
+              >
                 {prof.foto ? (
                   <img src={prof.foto} alt={prof.nome} className="h-12 w-12 rounded-full object-cover" />
                 ) : (
@@ -77,7 +81,7 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
                     <span className="text-sm text-gray-600 ml-1">{prof.pontuacao}</span>
                   </div>
                 </div>
-              </div>
+              </a>
             ))}
         </div>
       </div>
