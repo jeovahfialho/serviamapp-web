@@ -5,114 +5,110 @@ import _ from 'lodash';
 const CompactSmartSearch = ({ profissionais, onSearch }) => {
   const [searchText, setSearchText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Função para limpar a busca
-  const handleClear = () => {
-    setSearchText('');
-    onSearch(profissionais); // Resetar para todos os profissionais
+  // Mapa de termos relacionados à saúde mental
+  const mentalHealthTerms = {
+    'depressão': ['tristeza', 'humor', 'melancolia', 'desânimo', 'terapia'],
+    'ansiedade': ['nervosismo', 'pânico', 'preocupação', 'angústia', 'medo'],
+    'casamento': ['relacionamento', 'casal', 'família', 'conjugal', 'matrimonial'],
+    'terapia': ['psicoterapia', 'aconselhamento', 'tratamento', 'acompanhamento'],
+    'trauma': ['estresse', 'ptsd', 'abuso', 'violência'],
+    'comportamento': ['conduta', 'hábitos', 'atitude', 'psychological'],
+    'emocional': ['sentimentos', 'emoções', 'afeto', 'humor'],
+    'stress': ['estresse', 'tensão', 'pressão', 'burnout']
   };
 
-  // Construir automaticamente o mapa de contextos a partir dos dados
-  const contextMap = useMemo(() => {
-    const map = new Map();
+  // Função para expandir termos de busca
+  const expandSearchTerms = (searchText) => {
+    const terms = searchText.toLowerCase().split(/\s+/);
+    const expandedTerms = new Set(terms);
     
-    profissionais.forEach(prof => {
-      // Coletar todas as informações relevantes do profissional
-      const terms = [
-        prof.tipo,
-        ...(prof.atuacao || []),
-        ...(prof.especializacao || []),
-        ...(prof.cursos || []),
-        ...(prof.graduacao || []),
-        ...(prof.pos_graduacao || [])
-      ].filter(Boolean).map(term => term.toLowerCase());
-
-      // Para cada termo, criar relações com outros termos do mesmo profissional
-      terms.forEach(term => {
-        if (!map.has(term)) {
-          map.set(term, {
-            relacionados: new Set(),
-            profissionais: new Set(),
-            tipos: new Set()
-          });
+    terms.forEach(term => {
+      Object.entries(mentalHealthTerms).forEach(([key, relatedTerms]) => {
+        if (term.includes(key) || key.includes(term)) {
+          relatedTerms.forEach(relatedTerm => expandedTerms.add(relatedTerm));
         }
-
-        const entry = map.get(term);
-        entry.profissionais.add(prof.id);
-        entry.tipos.add(prof.tipo.toLowerCase());
-        
-        // Relacionar com outros termos do mesmo profissional
-        terms.forEach(relatedTerm => {
-          if (term !== relatedTerm) {
-            entry.relacionados.add(relatedTerm);
-          }
-        });
       });
     });
 
-    return map;
-  }, [profissionais]);
+    return Array.from(expandedTerms);
+  };
 
+  // Função para calcular relevância do profissional
+  const calculateRelevance = (prof, searchTerms) => {
+    let score = 0;
+    const profInfo = [
+      prof.tipo,
+      ...(prof.atuacao || []),
+      ...(prof.especializacao || []),
+      ...(prof.descricao ? [prof.descricao] : []),
+      ...(prof.cursos || []),
+      ...(prof.pos_graduacao || [])
+    ].map(item => item?.toLowerCase());
+
+    searchTerms.forEach(term => {
+      profInfo.forEach(info => {
+        if (!info) return; // Skip if info is undefined
+        
+        // Match direto
+        if (info === term) score += 5;
+        // Match parcial
+        if (info.includes(term)) score += 3;
+        if (term.includes(info)) score += 2;
+        
+        // Pontuação extra para profissionais da área mental quando os termos são relacionados
+        if (prof.tipo?.toLowerCase().includes('psico') || 
+            prof.atuacao?.some(area => area.toLowerCase().includes('psico'))) {
+          if (Object.keys(mentalHealthTerms).some(key => 
+              term.includes(key) || info.includes(key))) {
+            score += 3;
+          }
+        }
+      });
+    });
+
+    // Bônus para profissionais com mais experiência/pontuação
+    score += (prof.pontuacao || 0) / 10;
+
+    return score;
+  };
+
+  // Função para buscar profissionais
   const analyzeText = (text) => {
     setIsAnalyzing(true);
-    const words = text.toLowerCase().split(/\s+/);
+    setShowSuggestions(true);
+
+    const expandedTerms = expandSearchTerms(text);
     
-    // Encontrar termos relevantes no texto
-    const relevantTerms = new Set();
+    // Filtrar e pontuar profissionais
+    const scoredResults = profissionais.map(prof => {
+      const relevanceScore = calculateRelevance(prof, expandedTerms);
+      return {
+        ...prof,
+        matchScore: relevanceScore
+      };
+    }).filter(prof => prof.matchScore > 0);
+
+    // Ordenar por relevância
+    const sortedResults = _.orderBy(scoredResults, ['matchScore'], ['desc']);
     
-    // Para cada palavra no texto de busca
-    words.forEach(word => {
-      // Procurar matches diretos e parciais no contextMap
-      contextMap.forEach((value, key) => {
-        if (key.includes(word) || word.includes(key)) {
-          relevantTerms.add(key);
-          // Adicionar termos relacionados
-          value.relacionados.forEach(related => relevantTerms.add(related));
-        }
-      });
-    });
-
-    // Encontrar profissionais relevantes
-    const matchedProfessionals = profissionais.filter(prof => {
-      const profTerms = [
-        prof.tipo,
-        ...(prof.atuacao || []),
-        ...(prof.especializacao || [])
-      ].map(term => term.toLowerCase());
-
-      return profTerms.some(term => relevantTerms.has(term)) ||
-             Array.from(relevantTerms).some(term => 
-               profTerms.some(profTerm => 
-                 profTerm.includes(term) || term.includes(profTerm)
-               )
-             );
-    });
-
-    // Calcular relevância
-    const scoredResults = matchedProfessionals.map(prof => {
-      let score = prof.pontuacao || 0;
-      
-      const profTerms = [
-        prof.tipo,
-        ...(prof.atuacao || []),
-        ...(prof.especializacao || [])
-      ].map(term => term.toLowerCase());
-
-      // Aumentar score baseado em matches
-      relevantTerms.forEach(term => {
-        const directMatch = profTerms.some(pt => pt === term);
-        const partialMatch = profTerms.some(pt => pt.includes(term) || term.includes(pt));
-        
-        if (directMatch) score += 3;
-        if (partialMatch) score += 1;
-      });
-
-      return { ...prof, matchScore: score };
-    });
-
-    const sortedResults = _.orderBy(scoredResults, ['matchScore', 'pontuacao'], ['desc', 'desc']);
+    setSearchResults(sortedResults);
     setIsAnalyzing(false);
     onSearch(sortedResults);
+  };
+
+  // Gerar sugestões relevantes baseadas na busca atual
+  const relevantSuggestions = useMemo(() => {
+    if (!searchText || !showSuggestions || !searchResults.length) return [];
+    return searchResults.slice(0, 3);
+  }, [searchResults, searchText, showSuggestions]);
+
+  const handleClear = () => {
+    setSearchText('');
+    setShowSuggestions(false);
+    onSearch(profissionais);
   };
 
   return (
@@ -126,7 +122,7 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
         />
         {searchText && (
           <button
-            onClick={() => handleClear()}
+            onClick={handleClear}
             className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="h-4 w-4" />
@@ -159,40 +155,47 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
         )}
       </div>
 
-      <div className="mt-3">
-        <p className="text-sm text-gray-600 mb-2">Sugestões populares:</p>
-        <div className="flex flex-wrap gap-2">
-          {_.sampleSize(
-            profissionais
-              .flatMap(prof => prof.atuacao || [])
-              .filter(Boolean)
-              .map(area => {
-                const emoji = area.toLowerCase().includes('psico') ? '🧠' :
-                            area.toLowerCase().includes('nutri') ? '🥗' :
-                            area.toLowerCase().includes('fisio') ? '💪' :
-                            area.toLowerCase().includes('pediatr') ? '👶' :
-                            area.toLowerCase().includes('cardio') ? '❤️' :
-                            area.toLowerCase().includes('neuro') ? '🔬' :
-                            area.toLowerCase().includes('dent') ? '🦷' :
-                            '⚕️';
-                return `${emoji} ${area}`;
-              }),
-            3
-          ).map((suggestion) => (
-            <button
-              key={suggestion}
-              onClick={() => {
-                const text = suggestion.split(' ').slice(1).join(' ');
-                setSearchText(text);
-                analyzeText(text);
-              }}
-              className="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded-full cursor-pointer hover:bg-indigo-100 transition-colors"
-            >
-              {suggestion}
-            </button>
-          ))}
+      {showSuggestions && relevantSuggestions.length > 0 && (
+        <div className="mt-3">
+          <p className="text-sm text-gray-600 mb-2">Profissionais relacionados:</p>
+          <div className="flex flex-col gap-2">
+            {relevantSuggestions.map((prof) => {
+              const emoji = prof.tipo?.toLowerCase().includes('psico') ? '🧠' :
+                          prof.tipo?.toLowerCase().includes('nutri') ? '🥗' :
+                          prof.tipo?.toLowerCase().includes('fisio') ? '💪' :
+                          prof.tipo?.toLowerCase().includes('pediatr') ? '👶' :
+                          prof.tipo?.toLowerCase().includes('cardio') ? '❤️' :
+                          prof.tipo?.toLowerCase().includes('neuro') ? '🔬' :
+                          prof.tipo?.toLowerCase().includes('dent') ? '🦷' :
+                          '⚕️';
+              return (
+                <a
+                  key={`prof-${prof.id}`}
+                  href={`/profissional/${prof.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.location.href = `/profissional/${prof.id}`;
+                  }}
+                  className="text-left px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors flex items-center justify-between group"
+                >
+                  <div className="flex items-center gap-2">
+                    <span>{emoji}</span>
+                    <div>
+                      <div className="font-medium">{prof.nome}</div>
+                      <div className="text-xs text-indigo-500">{prof.tipo}</div>
+                    </div>
+                  </div>
+                  {prof.pontuacao >= 4.8 && (
+                    <div className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">
+                      Top profissional
+                    </div>
+                  )}
+                </a>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
