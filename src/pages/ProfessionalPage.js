@@ -96,37 +96,37 @@ const ProfessionalPage = () => {
       </nav>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {/* Hero Section */}
-        <div className="bg-white rounded-2xl shadow-sm p-8 mb-8">
-          <div className="flex gap-6">
+        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:p-8 mb-8">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-6">
             {/* Foto */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex justify-center md:justify-start">
               {professional.foto ? (
                 <img
                   src={professional.foto}
                   alt={professional.nome}
-                  className="h-32 w-32 rounded-2xl object-cover"
+                  className="h-24 w-24 sm:h-32 sm:w-32 rounded-2xl object-cover"
                 />
               ) : (
-                <div className="h-32 w-32 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                  <User className="h-12 w-12 text-blue-600" />
+                <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                  <User className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600" />
                 </div>
               )}
             </div>
 
             {/* Info */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold text-gray-900">{professional.nome}</h1>
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-2 sm:gap-3 mb-2 flex-wrap">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{professional.nome}</h1>
                 {professional.verificado && (
-                  <MdVerified className="h-7 w-7 text-blue-500" />
+                  <MdVerified className="h-6 w-6 sm:h-7 sm:w-7 text-blue-500" />
                 )}
               </div>
-              <p className="text-lg text-blue-600 font-medium mb-1">{professional.tipo}</p>
-              <p className="text-gray-600 mb-4">{professional.registro}</p>
+              <p className="text-base sm:text-lg text-blue-600 font-medium mb-1">{professional.tipo}</p>
+              <p className="text-sm sm:text-base text-gray-600 mb-4">{professional.registro}</p>
               
-              <div className="flex items-center gap-6">
+              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                 <button 
                   onClick={() => setShowReviews(true)}
                   className="flex items-center group hover:bg-gray-50 rounded-lg px-3 py-2 transition-colors"
@@ -149,13 +149,13 @@ const ProfessionalPage = () => {
             </div>
 
             {/* Ações */}
-            <div className="flex-shrink-0">
+            <div className="w-full md:w-auto mt-4 md:mt-0">
               <button
                 onClick={() => setShowContact(!showContact)}
-                className="w-full bg-[#273440] text-white px-6 py-3 rounded-xl hover:bg-[#1e2832] transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-[#273440] text-white px-4 sm:px-6 py-3 rounded-xl hover:bg-[#1e2832] transition-colors flex items-center justify-center gap-2"
               >
                 <Phone className="h-5 w-5" />
-                Contatar
+                <span>Contatar</span>
               </button>
 
               {showContact && (
@@ -168,13 +168,13 @@ const ProfessionalPage = () => {
                       className="flex items-center gap-2 text-green-600 hover:text-green-700"
                     >
                       <Phone className="h-5 w-5" />
-                      {professional.telefone}
+                      <span className="break-all">{professional.telefone}</span>
                     </a>
                   )}
                   {professional.email && (
                     <div className="flex items-center gap-2 text-gray-600">
                       <Mail className="h-5 w-5" />
-                      {professional.email}
+                      <span className="break-all">{professional.email}</span>
                     </div>
                   )}
                 </div>
@@ -184,9 +184,9 @@ const ProfessionalPage = () => {
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Sobre e Especialização */}
             <div className="space-y-6">
               {professional.descricao && (
