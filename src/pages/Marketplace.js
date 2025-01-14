@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Search, Filter, User, BookOpen, Trophy,
+  Search, Filter, User, BookOpen,
   DollarSign, Award, Star, Phone, LayoutDashboard,
-  ChevronDown, ChevronUp, Users , CheckCircle, Medal
+  ChevronDown, ChevronUp, Users 
 } from 'lucide-react';
+import { MdVerified } from 'react-icons/md';
 import ServianLogoText from '../components/ServianLogoText';
 import SideComponents from '../components/SideComponents';
 import { Analytics } from "@vercel/analytics/react"
-
+import ReviewsModal from '../components/ReviewsModal'; // Ajuste o caminho conforme sua estrutura
 
 const MarketplacePage = () => {
 
   <Analytics />
+  const [selectedProfReview, setSelectedProfReview] = useState(null);
   const navigate = useNavigate();
   const [profissionais, setProfissionais] = useState([]);
   const [profissionaisFiltrados, setProfissionaisFiltrados] = useState([]);
@@ -624,8 +626,7 @@ const faixasEtariasDisponiveis = [
                             {prof.tipo}
                           </span>
                           <div className="flex items-center gap-0.5">
-                            <Medal className="h-5 w-5 text-yellow-400" />
-                            <CheckCircle className="h-4 w-4 text-blue-500" />
+                            {prof.verificado && <MdVerified className="h-7 w-7 text-blue-500" />}
                           </div>
                         </div>
                         <h3 className="font-semibold text-gray-900 truncate">
@@ -749,7 +750,7 @@ const faixasEtariasDisponiveis = [
                             {faixa}
                           </span>
                         ))}
-                        {!prof.faixa_etaria || prof.faixa_etaria.length === 0 && (
+                        {(!prof.faixa_etaria || prof.faixa_etaria.length) === 0 && (
                           <span className="text-sm text-gray-500">
                             Não especificado
                           </span>
@@ -759,12 +760,17 @@ const faixasEtariasDisponiveis = [
 
                     {/* Keep the footer section as is */}
                     <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-                      <div className="flex items-center">
-                        <Star className="h-5 w-5 text-yellow-400" />
+                      <button 
+                        onClick={() => setSelectedProfReview(prof)}
+                        className="flex items-center group hover:bg-gray-50 rounded-lg px-2 py-1 transition-colors"
+                      >
+                        <Star className="h-5 w-5 text-yellow-400 group-hover:scale-110 transition-transform" />
                         <span className="ml-1 font-medium">{prof.pontuacao}</span>
                         <span className="mx-1 text-gray-300">•</span>
-                        <span className="text-gray-600">{prof.referencias} avaliações</span>
-                      </div>
+                        <span className="text-gray-600 group-hover:text-blue-600 transition-colors">
+                          {prof.referencias} {prof.referencias === 1 ? 'avaliação' : 'avaliações'}
+                        </span>
+                      </button>
                       <div className="text-lg font-bold text-gray-900">
                         {Number(prof.valor) === 0 
                           ? "Valor a Consultar" 
@@ -772,6 +778,7 @@ const faixasEtariasDisponiveis = [
                         }
                       </div>
                     </div>
+
 
                     {/* Keep the contact button section as is */}
                     <div className="mt-4">
@@ -818,6 +825,8 @@ const faixasEtariasDisponiveis = [
               <SideComponents 
                 profissionais={profissionais}
                 profissionaisFiltrados={profissionaisFiltrados}
+                setProfissionaisFiltrados={setProfissionaisFiltrados}
+                setSelectedProfReview={setSelectedProfReview}
               />
 
           </div>
@@ -835,6 +844,14 @@ const faixasEtariasDisponiveis = [
           </p>
         </div>
       </footer>
+
+      <ReviewsModal 
+        isOpen={!!selectedProfReview}
+        onClose={() => setSelectedProfReview(null)}
+        profId={selectedProfReview?.id}
+        profName={selectedProfReview?.nome}
+      />
+
     </div>
   );
 };

@@ -1,7 +1,7 @@
 // Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, User, ChevronDown, LogOut, Calendar, Users, Clock, AlertCircle, ChevronUp, Activity } from 'lucide-react';
+import { User, ChevronDown, LogOut, Calendar, Users, Clock, AlertCircle, ChevronUp, Activity } from 'lucide-react';
 import ServianLogoText from '../components/ServianLogoText';
 import ServianLogo from '../components/ServianLogo';
 import CadastroModal from '../components/CadastroModal';

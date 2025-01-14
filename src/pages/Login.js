@@ -158,7 +158,7 @@ const LoginPage = () => {
       <div className="py-4 px-6">
         <p className="text-center text-sm text-gray-600">
           Desenvolvido por{' '}
-          <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+          <a href="" className="font-medium text-blue-600 hover:text-blue-500">
             Simões Tecnologia da Informação
           </a>
         </p>

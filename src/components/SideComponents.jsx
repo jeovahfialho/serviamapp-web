@@ -1,47 +1,55 @@
-import React, { useState } from 'react';
+import React, {  } from 'react';
 import { 
-  Award, Star, Users, Medal, Quote, ArrowRight, Trophy, 
-  Percent, Brain, CheckCircle, ShieldCheck 
+  Award, Star, Users, Quote, ArrowRight, Trophy, 
+  Percent, Brain
 } from 'lucide-react';
+import { MdVerified } from 'react-icons/md';
+import CompactSmartSearch from './CompactSmartSearch'; // Adicionar esta linha
 
-const SideComponents = ({ profissionais = [], profissionaisFiltrados = [] }) => {
-  const [quizStep, setQuizStep] = useState(0);
-  const [quizAnswers, setQuizAnswers] = useState({});
+const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setProfissionaisFiltrados, setSelectedProfReview  }) => {
 
   // Cálculo das estatísticas
+  // Parte do cálculo das estatísticas no SideComponents
   const calculaEstatisticas = React.useMemo(() => {
+    // Filtra profissionais que têm pontuação maior que 0 para não afetar a média
+    const profissionaisComAvaliacao = profissionais.filter(prof => 
+      prof.pontuacao && Number(prof.pontuacao) > 0
+    );
+
+    const satisfacaoMedia = profissionaisComAvaliacao.length 
+      ? profissionaisComAvaliacao.reduce((sum, prof) => sum + Number(prof.pontuacao), 0) / profissionaisComAvaliacao.length 
+      : 0;
+
     const totalConsultas = profissionais.reduce((sum, prof) => sum + (prof.referencias || 0), 0);
-    const satisfacaoMedia = profissionais.length ? 
-      profissionais.reduce((sum, prof) => sum + (prof.pontuacao || 0), 0) / profissionais.length : 0;
-    const profissionaisVerificados = profissionais.filter(prof => prof.pontuacao >= 4.5).length;
+    const profissionaisVerificados = profissionais.filter(prof => prof.verificado).length;
     const especialidadesUnicas = new Set(profissionais.flatMap(prof => prof.atuacao || [])).size;
 
     return {
       totalConsultas,
-      satisfacaoMedia,
+      satisfacaoMedia: Number(satisfacaoMedia.toFixed(1)),
       profissionaisVerificados,
       especialidadesUnicas
     };
   }, [profissionais]);
 
-  // Perguntas do Quiz
-  const quizQuestions = [
-    {
-      question: "Qual sua principal preocupação?",
-      options: ["Dores físicas", "Saúde mental", "Checkup geral", "Tratamento específico"]
-    },
-    {
-      question: "Preferência de atendimento?",
-      options: ["Presencial", "Online", "Ambos"]
-    },
-    {
-      question: "Urgência do atendimento?",
-      options: ["Urgente", "Esta semana", "Este mês", "Sem pressa"]
-    }
-  ];
 
   return (
     <div className="space-y-6">
+
+      {/* Busca Inteligente */}
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <h3 className="font-semibold text-lg mb-4 flex items-center">
+          <Brain className="h-5 w-5 text-indigo-500 mr-2" />
+          Encontre seu Especialista
+        </h3>
+        <div className="space-y-4">
+          <CompactSmartSearch 
+            profissionais={profissionais}
+            onSearch={(results) => setProfissionaisFiltrados(results)}
+          />
+        </div>
+      </div>
+
       {/* Profissionais Destaque */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h3 className="font-semibold text-lg mb-4 flex items-center">
@@ -74,60 +82,6 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [] }) => 
         </div>
       </div>
 
-      {/* Quiz de Saúde */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        <h3 className="font-semibold text-lg mb-4 flex items-center">
-          <Brain className="h-5 w-5 text-indigo-500 mr-2" />
-          Encontre seu Especialista Ideal
-        </h3>
-        <div className="space-y-4">
-          {quizStep < quizQuestions.length ? (
-            <>
-              <p className="text-gray-600 font-medium">
-                {quizQuestions[quizStep].question}
-              </p>
-              <div className="space-y-2">
-                {quizQuestions[quizStep].options.map((option, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setQuizAnswers({...quizAnswers, [quizStep]: option});
-                      setQuizStep(quizStep + 1);
-                    }}
-                    className="w-full p-3 text-left rounded-lg hover:bg-indigo-50 text-gray-700 hover:text-indigo-600 transition-colors"
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="text-center">
-              <p className="text-green-600 font-medium mb-3">
-                Encontramos o match perfeito!
-              </p>
-              <button 
-                onClick={() => setQuizStep(0)}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                Ver Recomendação
-              </button>
-            </div>
-          )}
-          <div className="flex justify-between text-sm text-gray-500 mt-4">
-            <span>Pergunta {quizStep + 1} de {quizQuestions.length}</span>
-            {quizStep > 0 && (
-              <button 
-                onClick={() => setQuizStep(quizStep - 1)}
-                className="text-indigo-600 hover:underline"
-              >
-                Voltar
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* Card de Conquistas da Plataforma */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h3 className="font-semibold text-lg mb-4 flex items-center">
@@ -135,15 +89,15 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [] }) => 
             Conquistas da Plataforma
         </h3>
         <div className="grid grid-cols-2 gap-4">
-            <div className="bg-blue-50 rounded-xl p-4 text-center">
+            <div className="bg-yellow-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
-                <CheckCircle className="h-8 w-8 text-blue-500" />
+                <Users className="h-8 w-8 text-yellow-500" />
             </div>
-            <div className="text-2xl font-bold text-blue-700">
+            <div className="text-2xl font-bold text-yellow-700">
                 {profissionais.filter(prof => prof.status === 'approved').length}
             </div>
-            <div className="text-sm text-blue-600">
-                Profissionais Aprovados
+            <div className="text-sm text-yellow-600">
+                Profissionais Cadastrados
             </div>
             </div>
 
@@ -152,21 +106,21 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [] }) => 
                 <Star className="h-8 w-8 text-green-500" />
             </div>
             <div className="text-2xl font-bold text-green-700">
-                {calculaEstatisticas.satisfacaoMedia.toFixed(1)}
+              {calculaEstatisticas.satisfacaoMedia}
             </div>
             <div className="text-sm text-green-600">
                 Satisfação Média
             </div>
             </div>
 
-            <div className="bg-yellow-50 rounded-xl p-4 text-center">
+            <div className="bg-blue-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
-                <Medal className="h-8 w-8 text-yellow-500" />
+                <MdVerified className="h-8 w-8 text-blue-500" />
             </div>
-            <div className="text-2xl font-bold text-yellow-700">
+            <div className="text-2xl font-bold text-blue-700">
                 {profissionais.filter(prof => prof.verificado).length}
             </div>
-            <div className="text-sm text-yellow-600">
+            <div className="text-sm text-blue-600">
                 Profissionais Verificados
             </div>
             </div>
@@ -187,52 +141,80 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [] }) => 
 
       {/* Histórias de Sucesso */}
       <div className="bg-white rounded-2xl shadow-md p-6">
-        <h3 className="font-semibold text-lg mb-4 flex items-center">
+        <h3 className="font-semibold text-lg mb-6 flex items-center">
           <Quote className="h-5 w-5 text-indigo-500 mr-2" />
           Histórias de Sucesso
         </h3>
-        <div className="space-y-4">
+        <div className="space-y-6">
           {profissionais
-            .filter(prof => prof.comentarios && prof.pontuacao >= 4.5)
+            .filter(prof => prof.referencias > 0 && prof.pontuacao >= 4.5)
             .slice(0, 3)
             .map((prof, index) => (
               <div 
                 key={index} 
-                className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 transition-transform hover:scale-102"
+                className="relative bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 transition-all hover:shadow-lg flex flex-col"
               >
-                <div className="flex items-start gap-3">
-                  {prof.foto ? (
-                    <img 
-                      src={prof.foto} 
-                      alt={prof.nome}
-                      className="w-12 h-12 rounded-full object-cover"
+                {/* Avaliação */}
+                <div className="flex items-center gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <Star 
+                      key={i} 
+                      className={`h-4 w-4 ${
+                        i < Math.round(prof.pontuacao) 
+                          ? 'text-yellow-400' 
+                          : 'text-gray-300'
+                      }`} 
+                      fill="currentColor"
                     />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
-                      <Users className="h-6 w-6 text-indigo-500" />
-                    </div>
-                  )}
-                  <div>
-                    <div className="flex items-center gap-1 mb-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          className={`h-4 w-4 ${i < Math.round(prof.pontuacao) 
-                            ? 'text-yellow-400' 
-                            : 'text-gray-300'}`} 
-                          fill="currentColor"
-                        />
-                      ))}
-                    </div>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {prof.comentarios?.[0] || "Atendimento excelente!"}
-                    </p>
-                    <div className="mt-2 flex items-center text-xs text-indigo-600">
-                      <span className="font-medium">Ver mais</span>
-                      <ArrowRight className="h-3 w-3 ml-1" />
+                  ))}
+                  <span className="ml-2 text-sm text-gray-500">
+                    {prof.pontuacao}
+                  </span>
+                </div>
+
+                {/* Comentário */}
+                <p className="text-md text-gray-700 mb-3 text-left">
+                  {prof.comentarios?.[0] || "Atendimento excelente e muito profissional!"}
+                </p>
+
+                {/* Nome do avaliador */}
+                <p className="text-sm text-gray-600 mb-4">
+                  Avaliado por: <span className="font-medium">Cliente Anônimo</span>
+                </p>
+
+                {/* Informações do profissional */}
+                <div className="flex items-start justify-between pt-2 border-t border-indigo-100">
+                  <div className="flex items-center gap-3">
+                    {prof.foto ? (
+                      <img 
+                        src={prof.foto} 
+                        alt={prof.nome}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-white shadow"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white shadow">
+                        <Users className="h-6 w-6 text-indigo-500" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        Dr. {prof.nome}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {prof.tipo}
+                      </p>
                     </div>
                   </div>
                 </div>
+
+                {/* Botão Ver mais */}
+                <button
+                  onClick={() => setSelectedProfReview?.(prof)}
+                  className="mt-4 text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 hover:gap-2 transition-all self-end"
+                >
+                  Ver mais
+                  <ArrowRight className="h-4 w-4" />
+                </button>
               </div>
             ))}
         </div>
