@@ -6,10 +6,12 @@ import {
   ChevronDown, ChevronUp, Users 
 } from 'lucide-react';
 import { MdVerified } from 'react-icons/md';
+import { AiOutlineInstagram } from 'react-icons/ai';
 import ServianLogoText from '../components/ServianLogoText';
 import SideComponents from '../components/SideComponents';
 import { Analytics } from "@vercel/analytics/react"
 import ReviewsModal from '../components/ReviewsModal'; // Ajuste o caminho conforme sua estrutura
+
 
 const MarketplacePage = () => {
 
@@ -626,9 +628,23 @@ const faixasEtariasDisponiveis = [
                           <span className="text-blue-600 text-sm font-medium truncate">
                             {prof.tipo}
                           </span>
-                          <div className="flex items-center gap-0.5">
-                            {prof.verificado && <MdVerified className="h-7 w-7 text-blue-500" />}
-                          </div>
+                          <div className="flex items-center gap-2">
+                          {prof.verificado && (
+                            <div title="Profissional verificado - Conduta, trabalho e formação validados">
+                              <MdVerified className="h-7 w-7 text-blue-500" />
+                            </div>
+                          )}
+                          {prof.instagram && (
+                            <a
+                              href={`https://instagram.com/${prof.instagram}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-pink-500 hover:text-pink-600 transition-colors"
+                            >
+                              <AiOutlineInstagram className="h-7 w-7" />
+                            </a>
+                          )}
+                        </div>
                         </div>
                         <h3 className="font-semibold text-gray-900 truncate">
                           {formatarNome(prof.nome)}
