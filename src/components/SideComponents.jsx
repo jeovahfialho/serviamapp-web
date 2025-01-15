@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Award, Star, Users, Quote, ArrowRight, Trophy, 
-  Percent, Brain
+  Percent, Brain, Map
 } from 'lucide-react';
 import { MdVerified } from 'react-icons/md';
-import CompactSmartSearch from './CompactSmartSearch'; // Adicionar esta linha
+import CompactSmartSearch from './CompactSmartSearch';
+import BrazilMap from './BrazilMap';
 import _ from 'lodash';
 
-const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setProfissionaisFiltrados, setSelectedProfReview  }) => {
+const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setProfissionaisFiltrados, setSelectedProfReview }) => {
 
-  const [loading, setLoading] = useState(true); // Adicionando o estado de loading
+  const [loading, setLoading] = useState(true);
+  
   // Cálculo das estatísticas
-  // Parte do cálculo das estatísticas no SideComponents
   const calculaEstatisticas = React.useMemo(() => {
     // Filtra profissionais que têm pontuação maior que 0 para não afetar a média
     const profissionaisComAvaliacao = profissionais.filter(prof => 
@@ -34,19 +35,16 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
     };
   }, [profissionais]);
 
-  {/* Histórias de Sucesso */}
   const [reviews, setReviews] = useState([]);
 
-  // Adicione este useEffect no início do componente
+  // Buscar reviews
   useEffect(() => {
     const fetchAllReviews = async () => {
       try {
-        // Primeiro, buscar todos os profissionais que têm reviews
         const profIds = profissionais
           .filter(prof => prof.referencias > 0)
           .map(prof => prof.id);
   
-        // Buscar reviews para cada profissional
         const allReviews = [];
         for (const profId of profIds) {
           const response = await fetch(`https://serviamapp-server.vercel.app/api/reviews?profId=${profId}&status=approved`);
@@ -54,7 +52,6 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
           allReviews.push(...data);
         }
   
-        // Embaralhar e filtrar os reviews
         const shuffledReviews = _.shuffle(allReviews)
           .filter(review => review.comment && review.comment.length > 0)
           .slice(0, 3);
@@ -72,7 +69,6 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
 
   return (
     <div className="space-y-6">
-
       {/* Busca Inteligente */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h3 className="font-semibold text-lg mb-4 flex items-center">
@@ -126,60 +122,79 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
       {/* Card de Conquistas da Plataforma */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h3 className="font-semibold text-lg mb-4 flex items-center">
-            <Trophy className="h-5 w-5 text-yellow-500 mr-2" />
-            Conquistas da Plataforma
+          <Trophy className="h-5 w-5 text-yellow-500 mr-2" />
+          Conquistas da Plataforma
         </h3>
         <div className="grid grid-cols-2 gap-4">
-            <div className="bg-yellow-50 rounded-xl p-4 text-center">
+          <div className="bg-yellow-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
-                <Users className="h-8 w-8 text-yellow-500" />
+              <Users className="h-8 w-8 text-yellow-500" />
             </div>
             <div className="text-2xl font-bold text-yellow-700">
-                {profissionais.filter(prof => prof.status === 'approved').length}
+              {profissionais.filter(prof => prof.status === 'approved').length}
             </div>
             <div className="text-sm text-yellow-600">
-                Profissionais Cadastrados
+              Profissionais Cadastrados
             </div>
-            </div>
+          </div>
 
-            <div className="bg-green-50 rounded-xl p-4 text-center">
+          <div className="bg-green-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
-                <Star className="h-8 w-8 text-green-500" />
+              <Star className="h-8 w-8 text-green-500" />
             </div>
             <div className="text-2xl font-bold text-green-700">
               {calculaEstatisticas.satisfacaoMedia}
             </div>
             <div className="text-sm text-green-600">
-                Satisfação Média
+              Satisfação Média
             </div>
-            </div>
+          </div>
 
-            <div className="bg-blue-50 rounded-xl p-4 text-center">
+          <div className="bg-blue-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
-                <MdVerified className="h-8 w-8 text-blue-500" />
+              <MdVerified className="h-8 w-8 text-blue-500" />
             </div>
             <div className="text-2xl font-bold text-blue-700">
-                {profissionais.filter(prof => prof.verificado).length}
+              {profissionais.filter(prof => prof.verificado).length}
             </div>
             <div className="text-sm text-blue-600">
-                Profissionais Verificados
+              Profissionais Verificados
             </div>
-            </div>
+          </div>
 
-            <div className="bg-orange-50 rounded-xl p-4 text-center">
+          <div className="bg-orange-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
-                <Award className="h-8 w-8 text-orange-500" />
+              <Award className="h-8 w-8 text-orange-500" />
             </div>
             <div className="text-2xl font-bold text-orange-700">
-                {calculaEstatisticas.especialidadesUnicas}
+              {calculaEstatisticas.especialidadesUnicas}
             </div>
             <div className="text-sm text-orange-600">
-                Especialidades
+              Especialidades
             </div>
-            </div>
+          </div>
         </div>
       </div>
 
+      {/* Mapa de Profissionais */}
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <h3 className="font-semibold text-lg mb-4 flex items-center">
+          <Map className="h-5 w-5 text-blue-500 mr-2" />
+          Presença Nacional
+        </h3>
+        <div className="space-y-4">
+          <BrazilMap 
+            estados={[...new Set(profissionais
+              .filter(prof => prof.estado)
+              .map(prof => prof.estado))]} 
+          />
+          <p className="text-sm text-gray-600 text-center mt-4">
+            Estados com profissionais cadastrados
+          </p>
+        </div>
+      </div>
+
+      {/* Histórias de Sucesso */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h3 className="font-semibold text-lg mb-6 flex items-center">
           <Quote className="h-5 w-5 text-indigo-500 mr-2" />
@@ -193,7 +208,6 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
         ) : reviews.length > 0 ? (
           <div className="space-y-6">
             {reviews.map((review) => {
-              // Encontra o profissional relacionado ao review
               const prof = profissionais.find(p => p.id === review.prof_id);
               if (!prof) return null;
 
@@ -202,7 +216,6 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
                   key={review.id}
                   className="relative bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 transition-all hover:shadow-lg flex flex-col"
                 >
-                  {/* Avaliação */}
                   <div className="flex items-center gap-1 mb-3">
                     {[...Array(5)].map((_, i) => (
                       <Star
@@ -220,12 +233,10 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
                     </span>
                   </div>
 
-                  {/* Comentário */}
                   <p className="text-md text-gray-700 mb-3 text-left">
                     {review.comment}
                   </p>
 
-                  {/* Nome do avaliador */}
                   <p className="text-sm text-gray-600 mb-4">
                     Avaliado por: <span className="font-medium">
                       {review.name || 'Cliente Anônimo'}
@@ -235,7 +246,6 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
                     )}
                   </p>
 
-                  {/* Informações do profissional */}
                   <div className="flex items-start justify-between pt-2 border-t border-indigo-100">
                     <div className="flex items-center gap-3">
                       {prof.foto ? (
@@ -260,7 +270,6 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
                     </div>
                   </div>
 
-                  {/* Botão Ver mais */}
                   <button
                     onClick={() => setSelectedProfReview?.(prof)}
                     className="mt-4 text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 hover:gap-2 transition-all self-end"
@@ -286,46 +295,7 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
           Promoções Ativas
         </h3>
         <div className="space-y-3">
-          {/* Primeira Consulta 
-          <div className="group relative bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl cursor-pointer hover:shadow-md transition-all">
-            <div className="absolute top-2 right-2">
-              <Tag className="h-5 w-5 text-green-500" />
-            </div>
-            <h4 className="font-medium text-green-700">Primeira Consulta</h4>
-            <p className="text-2xl font-bold text-green-600 mb-1">20% OFF</p>
-            <p className="text-sm text-green-600">Consultar Profissional</p>
-            <div className="mt-2 flex items-center text-xs text-green-600">
-              <span>Ver detalhes</span>
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </div>
-          </div>
-
-          <div className="group relative bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl cursor-pointer hover:shadow-md transition-all">
-            <div className="absolute top-2 right-2">
-              <Users className="h-5 w-5 text-blue-500" />
-            </div>
-            <h4 className="font-medium text-blue-700">Pacote Família</h4>
-            <p className="text-2xl font-bold text-blue-600 mb-1">30% OFF</p>
-            <p className="text-sm text-blue-600">Para 3 ou mais pessoas</p>
-            <div className="mt-2 flex items-center text-xs text-blue-600">
-              <span>Ver detalhes</span>
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </div>
-          </div>
-
-          <div className="group relative bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl cursor-pointer hover:shadow-md transition-all">
-            <div className="absolute top-2 right-2">
-              <CircleDollarSign className="h-5 w-5 text-purple-500" />
-            </div>
-            <h4 className="font-medium text-purple-700">Oferta Relâmpago</h4>
-            <p className="text-lg font-bold text-purple-600 mb-1">Consulta + Retorno</p>
-            <p className="text-sm text-purple-600">Válido apenas hoje!</p>
-            <div className="mt-2 flex items-center text-xs text-purple-600">
-              <span>Ver detalhes</span>
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </div>
-          </div>
-          */}
+          {/* Área para promoções futuras */}
         </div>
       </div>
     </div>
