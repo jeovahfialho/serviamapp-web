@@ -255,7 +255,18 @@ const BrazilMap = ({ estados = [] }) => {
         Opcional: se quiser renderizar um "pin" para cada estado presente em `estados`,
         faça um map aqui. Ou remova se não quiser esses círculos adicionais.
       */}
-      
+      {estados.map((estado) => {
+        const { x, y } = getStateCenter(estado);
+        return (
+          <circle
+            key={estado}
+            className="fill-indigo-500/50"
+            r="12"
+            cx={x}
+            cy={y}
+          />
+        );
+      })}
     </svg>
   );
 };
