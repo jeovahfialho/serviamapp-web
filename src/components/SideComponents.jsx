@@ -1,13 +1,15 @@
-import React, {  } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Award, Star, Users, Quote, ArrowRight, Trophy, 
   Percent, Brain
 } from 'lucide-react';
 import { MdVerified } from 'react-icons/md';
 import CompactSmartSearch from './CompactSmartSearch'; // Adicionar esta linha
+import _ from 'lodash';
 
 const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setProfissionaisFiltrados, setSelectedProfReview  }) => {
 
+  const [loading, setLoading] = useState(true); // Adicionando o estado de loading
   // Cálculo das estatísticas
   // Parte do cálculo das estatísticas no SideComponents
   const calculaEstatisticas = React.useMemo(() => {
@@ -32,6 +34,41 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
     };
   }, [profissionais]);
 
+  {/* Histórias de Sucesso */}
+  const [reviews, setReviews] = useState([]);
+
+  // Adicione este useEffect no início do componente
+  useEffect(() => {
+    const fetchAllReviews = async () => {
+      try {
+        // Primeiro, buscar todos os profissionais que têm reviews
+        const profIds = profissionais
+          .filter(prof => prof.referencias > 0)
+          .map(prof => prof.id);
+  
+        // Buscar reviews para cada profissional
+        const allReviews = [];
+        for (const profId of profIds) {
+          const response = await fetch(`https://serviamapp-server.vercel.app/api/reviews?profId=${profId}&status=approved`);
+          const data = await response.json();
+          allReviews.push(...data);
+        }
+  
+        // Embaralhar e filtrar os reviews
+        const shuffledReviews = _.shuffle(allReviews)
+          .filter(review => review.comment && review.comment.length > 0)
+          .slice(0, 3);
+  
+        setReviews(shuffledReviews);
+      } catch (error) {
+        console.error('Erro ao buscar reviews:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchAllReviews();
+  }, [profissionais]);
 
   return (
     <div className="space-y-6">
@@ -143,85 +180,103 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
         </div>
       </div>
 
-      {/* Histórias de Sucesso */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h3 className="font-semibold text-lg mb-6 flex items-center">
           <Quote className="h-5 w-5 text-indigo-500 mr-2" />
           Histórias de Sucesso
         </h3>
-        <div className="space-y-6">
-          {profissionais
-            .filter(prof => prof.referencias > 0 && prof.pontuacao >= 4.5)
-            .slice(0, 3)
-            .map((prof, index) => (
-              <div 
-                key={index} 
-                className="relative bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 transition-all hover:shadow-lg flex flex-col"
-              >
-                {/* Avaliação */}
-                <div className="flex items-center gap-1 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={i} 
-                      className={`h-4 w-4 ${
-                        i < Math.round(prof.pontuacao) 
-                          ? 'text-yellow-400' 
-                          : 'text-gray-300'
-                      }`} 
-                      fill="currentColor"
-                    />
-                  ))}
-                  <span className="ml-2 text-sm text-gray-500">
-                    {prof.pontuacao}
-                  </span>
-                </div>
+        
+        {loading ? (
+          <div className="text-center text-gray-500 py-8">
+            Carregando histórias de sucesso...
+          </div>
+        ) : reviews.length > 0 ? (
+          <div className="space-y-6">
+            {reviews.map((review) => {
+              // Encontra o profissional relacionado ao review
+              const prof = profissionais.find(p => p.id === review.prof_id);
+              if (!prof) return null;
 
-                {/* Comentário */}
-                <p className="text-md text-gray-700 mb-3 text-left">
-                  {prof.comentarios?.[0] || "Atendimento excelente e muito profissional!"}
-                </p>
-
-                {/* Nome do avaliador */}
-                <p className="text-sm text-gray-600 mb-4">
-                  Avaliado por: <span className="font-medium">Cliente Anônimo</span>
-                </p>
-
-                {/* Informações do profissional */}
-                <div className="flex items-start justify-between pt-2 border-t border-indigo-100">
-                  <div className="flex items-center gap-3">
-                    {prof.foto ? (
-                      <img 
-                        src={prof.foto} 
-                        alt={prof.nome}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-white shadow"
+              return (
+                <div
+                  key={review.id}
+                  className="relative bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 transition-all hover:shadow-lg flex flex-col"
+                >
+                  {/* Avaliação */}
+                  <div className="flex items-center gap-1 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${
+                          i < Math.round(review.rating)
+                            ? 'text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                        fill="currentColor"
                       />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white shadow">
-                        <Users className="h-6 w-6 text-indigo-500" />
-                      </div>
+                    ))}
+                    <span className="ml-2 text-sm text-gray-500">
+                      {review.rating}
+                    </span>
+                  </div>
+
+                  {/* Comentário */}
+                  <p className="text-md text-gray-700 mb-3 text-left">
+                    {review.comment}
+                  </p>
+
+                  {/* Nome do avaliador */}
+                  <p className="text-sm text-gray-600 mb-4">
+                    Avaliado por: <span className="font-medium">
+                      {review.name || 'Cliente Anônimo'}
+                    </span>
+                    {review.date && (
+                      <span className="text-gray-400"> • {new Date(review.date).toLocaleDateString('pt-BR')}</span>
                     )}
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        Dr. {prof.nome}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {prof.tipo}
-                      </p>
+                  </p>
+
+                  {/* Informações do profissional */}
+                  <div className="flex items-start justify-between pt-2 border-t border-indigo-100">
+                    <div className="flex items-center gap-3">
+                      {prof.foto ? (
+                        <img
+                          src={prof.foto}
+                          alt={prof.nome}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-white shadow"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white shadow">
+                          <Users className="h-6 w-6 text-indigo-500" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {prof.nome}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {prof.tipo}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Botão Ver mais */}
-                <button
-                  onClick={() => setSelectedProfReview?.(prof)}
-                  className="mt-4 text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 hover:gap-2 transition-all self-end"
-                >
-                  Ver mais
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-        </div>
+                  {/* Botão Ver mais */}
+                  <button
+                    onClick={() => setSelectedProfReview?.(prof)}
+                    className="mt-4 text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 hover:gap-2 transition-all self-end"
+                  >
+                    Ver mais
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center text-gray-500 py-8">
+            Nenhuma história encontrada no momento.
+          </div>
+        )}
       </div>
 
       {/* Promoções Ativas */}
