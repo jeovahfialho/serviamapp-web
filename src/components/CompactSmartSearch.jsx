@@ -3,12 +3,7 @@ import { Brain, X } from 'lucide-react';
 import _ from 'lodash';
 
 const CompactSmartSearch = ({ profissionais, onSearch }) => {
-  const [searchText, setSearchText] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Mapa de termos relacionados à saúde mental
   const mentalHealthTerms = {
     'depressão': ['tristeza', 'humor', 'melancolia', 'desânimo', 'terapia'],
     'ansiedade': ['nervosismo', 'pânico', 'preocupação', 'angústia', 'medo'],
@@ -19,8 +14,56 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
     'emocional': ['sentimentos', 'emoções', 'afeto', 'humor'],
     'stress': ['estresse', 'tensão', 'pressão', 'burnout']
   };
+  
+  const [searchText, setSearchText] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Função para expandir termos de busca
+  const analyzeText = async (text) => {
+    setIsAnalyzing(true);
+    setShowSuggestions(true);
+
+    try {
+      // First try DeepSeek API
+      const response = await fetch('/api/smart-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: text })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data.professionals);
+        onSearch(data.professionals);
+      } else {
+        // Fallback to local search if API fails
+        fallbackSearch(text);
+      }
+    } catch (error) {
+      console.error('DeepSeek search failed:', error);
+      fallbackSearch(text);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Existing local search as fallback
+  const fallbackSearch = (text) => {
+    const expandedTerms = expandSearchTerms(text);
+    const scoredResults = profissionais
+      .map(prof => ({
+        ...prof,
+        matchScore: calculateRelevance(prof, expandedTerms)
+      }))
+      .filter(prof => prof.matchScore > 0);
+
+    const sortedResults = _.orderBy(scoredResults, ['matchScore'], ['desc']);
+    setSearchResults(sortedResults);
+    onSearch(sortedResults);
+  };
+
+  // Keep existing helper functions
   const expandSearchTerms = (searchText) => {
     const terms = searchText.toLowerCase().split(/\s+/);
     const expandedTerms = new Set(terms);
@@ -36,7 +79,6 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
     return Array.from(expandedTerms);
   };
 
-  // Função para calcular relevância do profissional
   const calculateRelevance = (prof, searchTerms) => {
     let score = 0;
     const profInfo = [
@@ -50,15 +92,11 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
 
     searchTerms.forEach(term => {
       profInfo.forEach(info => {
-        if (!info) return; // Skip if info is undefined
-        
-        // Match direto
+        if (!info) return;
         if (info === term) score += 5;
-        // Match parcial
         if (info.includes(term)) score += 3;
         if (term.includes(info)) score += 2;
         
-        // Pontuação extra para profissionais da área mental quando os termos são relacionados
         if (prof.tipo?.toLowerCase().includes('psico') || 
             prof.atuacao?.some(area => area.toLowerCase().includes('psico'))) {
           if (Object.keys(mentalHealthTerms).some(key => 
@@ -69,37 +107,11 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
       });
     });
 
-    // Bônus para profissionais com mais experiência/pontuação
     score += (prof.pontuacao || 0) / 10;
-
     return score;
   };
 
-  // Função para buscar profissionais
-  const analyzeText = (text) => {
-    setIsAnalyzing(true);
-    setShowSuggestions(true);
-
-    const expandedTerms = expandSearchTerms(text);
-    
-    // Filtrar e pontuar profissionais
-    const scoredResults = profissionais.map(prof => {
-      const relevanceScore = calculateRelevance(prof, expandedTerms);
-      return {
-        ...prof,
-        matchScore: relevanceScore
-      };
-    }).filter(prof => prof.matchScore > 0);
-
-    // Ordenar por relevância
-    const sortedResults = _.orderBy(scoredResults, ['matchScore'], ['desc']);
-    
-    setSearchResults(sortedResults);
-    setIsAnalyzing(false);
-    onSearch(sortedResults);
-  };
-
-  // Gerar sugestões relevantes baseadas na busca atual
+  // Keep existing UI rendering code
   const relevantSuggestions = useMemo(() => {
     if (!searchText || !showSuggestions || !searchResults.length) return [];
     return searchResults.slice(0, 3);
@@ -134,6 +146,7 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
         <button
           onClick={() => analyzeText(searchText)}
           className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-colors flex items-center justify-center gap-2"
+          disabled={isAnalyzing}
         >
           {isAnalyzing ? (
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />

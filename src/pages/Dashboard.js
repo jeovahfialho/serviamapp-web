@@ -1,7 +1,10 @@
 // Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, ChevronDown, LogOut, Calendar, Users, Clock, AlertCircle, ChevronUp, Activity } from 'lucide-react';
+import { 
+  User, ChevronDown, LogOut, Calendar, Users, Clock, AlertCircle, ChevronUp, Activity,
+  CheckCircle, XCircle, Star, Shield, Video, Zap, GraduationCap, ChevronRight, Instagram 
+} from 'lucide-react';
 import ServianLogoText from '../components/ServianLogoText';
 import ServianLogo from '../components/ServianLogo';
 import CadastroModal from '../components/CadastroModal';
@@ -20,21 +23,69 @@ const Dashboard = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mostrarCadastro, setMostrarCadastro] = useState(false);
   const [userData, setUserData] = useState({
-    nome: 'Dr. Silva',
+    nome: '',
     email: '',
     cpf: '',
+    telefone: '',
+    tipo: '',
+    cidade: '',
+    estado: '',
+    bairro: '',
     status: 'pending',
-    appointments: 12,
-    patients: 45,
-    waitingList: 3,
-    completionRate: 30,
-    stats: {
-      income: 15000,
-      appointmentsCompleted: 48,
-      averageRating: 4.8,
-      totalReviews: 42
-    }
+    verificado: false,
+    atendimentoonline: false,
+    atendimentoemergencia: false,
+    especializacao: [],
+    pontuacao: 0,
+    referencias: 0,
+    reviews: []
   });
+
+  const calculateProfileCompleteness = (userData) => {
+    const requiredFields = [
+      'cpf',
+      'especializacao',
+      'graduacao',
+      'atuacao',
+      'email',
+      'telefone',
+      'nome',
+      'tipo',
+      'cidade',
+      'estado',
+      'bairro'
+    ];
+    
+    const optionalFields = [
+      'pos_graduacao',
+      'cursos',
+      'instagram',
+      'faixa_etaria',
+      'planos'
+    ];
+  
+    let completedRequired = 0;
+    let completedOptional = 0;
+  
+    requiredFields.forEach(field => {
+      if (userData[field]) completedRequired++;
+    });
+  
+    optionalFields.forEach(field => {
+      if (Array.isArray(userData[field]) ? userData[field].length > 0 : userData[field]) 
+        completedOptional++;
+    });
+  
+    const requiredWeight = 0.7;
+    const optionalWeight = 0.3;
+  
+    const requiredScore = (completedRequired / requiredFields.length) * requiredWeight;
+    const optionalScore = (completedOptional / optionalFields.length) * optionalWeight;
+  
+    return Math.round((requiredScore + optionalScore) * 100);
+  };
+  
+  const isProfileComplete = (userData) => calculateProfileCompleteness(userData) === 100;
 
   // Função para verificar se é admin
   const checkIsAdmin = (userPhone) => {
@@ -230,6 +281,9 @@ const Dashboard = () => {
           cpf: data.cpf || ''
         }));
 
+        console.log('Dados recebidos da API:', data); // Log para debug
+        console.log('Reviews recebidas:', data.reviews); // Log específico para reviews
+
         // Verificar se é admin
         setIsAdmin(checkIsAdmin(data.telefone));
   
@@ -248,6 +302,52 @@ const Dashboard = () => {
       fetchProfissionais();
     }
   }, [isAdmin]);
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      const token = localStorage.getItem('token');
+      try {
+        // Primeira chamada: dados do usuário via /api/me
+        const userResponse = await fetch('https://serviamapp-server.vercel.app/api/me', {
+          headers: { 
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!userResponse.ok) throw new Error('Erro ao carregar dados');
+        const userData = await userResponse.json();
+  
+        // Segunda chamada: buscar dados completos do profissional incluindo reviews
+        const profResponse = await fetch(`https://serviamapp-server.vercel.app/api/profissionais?id=${userData.id}`, {
+          headers: { 
+            'Authorization': `Bearer ${token}`
+          }
+        });
+  
+        if (profResponse.ok) {
+          const profData = await profResponse.json();
+          console.log('Dados completos do profissional:', profData);
+  
+          // Combina os dados do /api/me com os dados completos do profissional
+          setUserData(prevData => ({
+            ...prevData,
+            ...userData,
+            ...profData,
+            reviews: profData.reviews || [] // Garante que reviews existe mesmo que vazio
+          }));
+        }
+  
+        // Verificar se é admin
+        setIsAdmin(checkIsAdmin(userData.telefone));
+  
+      } catch (error) {
+        console.error('Erro:', error);
+        navigate('/login');
+      }
+    };
+  
+    loadUserData();
+  }, [navigate]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -330,26 +430,279 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="pt-16 px-4 md:px-8">
-        {/* Profile Completion Alert */}
-        {isProfileIncomplete && (
-          <div className="bg-blue-50 p-4 rounded-lg mb-6 mt-6">
-            <div className="flex">
-              <AlertCircle className="text-blue-600 mr-2" />
-              <div>
-                <h3 className="text-blue-800 font-medium">Complete seu cadastro</h3>
-                <p className="text-blue-700 text-sm mt-1">
-                  Para garantir a segurança e confiabilidade da plataforma, complete seu cadastro com informações essenciais como CPF e email.
-                </p>
-                <button 
-                  onClick={() => setMostrarCadastro(true)}
-                  className="mt-2 text-blue-600 text-sm font-medium hover:text-blue-700"
-                >
-                  Completar cadastro →
-                </button>
+        {/* Profile Completion Card */}
+        <div className="bg-white p-6 rounded-lg shadow-sm mb-6 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Profile Completion */}
+            {/* Status do Cadastro */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Status do Cadastro</h3>
+              <div className="grid grid-cols-3 gap-x-6 gap-y-4">
+                {/* Coluna 1 */}
+                <div className="space-y-4">
+                  {userData.nome ? (
+                    <div className="flex items-center text-green-600">
+                      <CheckCircle size={16} className="mr-2" />
+                      <span className="text-sm">Nome</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-gray-400">
+                      <XCircle size={16} className="mr-2" />
+                      <span className="text-sm">Nome *</span>
+                    </div>
+                  )}
+                  {userData.cpf ? (
+                    <div className="flex items-center text-green-600">
+                      <CheckCircle size={16} className="mr-2" />
+                      <span className="text-sm">CPF</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-gray-400">
+                      <XCircle size={16} className="mr-2" />
+                      <span className="text-sm">CPF *</span>
+                    </div>
+                  )}
+                  {userData.email ? (
+                    <div className="flex items-center text-green-600">
+                      <CheckCircle size={16} className="mr-2" />
+                      <span className="text-sm">Email</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-gray-400">
+                      <XCircle size={16} className="mr-2" />
+                      <span className="text-sm">Email *</span>
+                    </div>
+                  )}
+                  {userData.instagram ? (
+                    <div className="flex items-center text-yellow-600">
+                      <CheckCircle size={16} className="mr-2" />
+                      <span className="text-sm">Instagram</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-gray-400">
+                      <XCircle size={16} className="mr-2" />
+                      <span className="text-sm">Instagram</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Coluna 2 */}
+                <div className="space-y-4">
+                  {userData.telefone ? (
+                    <div className="flex items-center text-green-600">
+                      <CheckCircle size={16} className="mr-2" />
+                      <span className="text-sm">Telefone</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-gray-400">
+                      <XCircle size={16} className="mr-2" />
+                      <span className="text-sm">Telefone *</span>
+                    </div>
+                  )}
+                  {userData.tipo ? (
+                    <div className="flex items-center text-green-600">
+                      <CheckCircle size={16} className="mr-2" />
+                      <span className="text-sm">Tipo</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-gray-400">
+                      <XCircle size={16} className="mr-2" />
+                      <span className="text-sm">Tipo *</span>
+                    </div>
+                  )}
+                  {userData.especializacao?.length > 0 ? (
+                    <div className="flex items-center text-green-600">
+                      <CheckCircle size={16} className="mr-2" />
+                      <span className="text-sm">Especialização</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-gray-400">
+                      <XCircle size={16} className="mr-2" />
+                      <span className="text-sm">Especialização *</span>
+                    </div>
+                  )}
+                  {userData.pos_graduacao?.length > 0 ? (
+                    <div className="flex items-center text-yellow-600">
+                      <CheckCircle size={16} className="mr-2" />
+                      <span className="text-sm">Pós-graduação</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-gray-400">
+                      <XCircle size={16} className="mr-2" />
+                      <span className="text-sm">Pós-graduação</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Coluna 3 */}
+                <div className="space-y-4">
+                  {userData.cidade ? (
+                    <div className="flex items-center text-green-600">
+                      <CheckCircle size={16} className="mr-2" />
+                      <span className="text-sm">Cidade</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-gray-400">
+                      <XCircle size={16} className="mr-2" />
+                      <span className="text-sm">Cidade *</span>
+                    </div>
+                  )}
+                  {userData.estado ? (
+                    <div className="flex items-center text-green-600">
+                      <CheckCircle size={16} className="mr-2" />
+                      <span className="text-sm">Estado</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-gray-400">
+                      <XCircle size={16} className="mr-2" />
+                      <span className="text-sm">Estado *</span>
+                    </div>
+                  )}
+                  {userData.bairro ? (
+                    <div className="flex items-center text-green-600">
+                      <CheckCircle size={16} className="mr-2" />
+                      <span className="text-sm">Bairro</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-gray-400">
+                      <XCircle size={16} className="mr-2" />
+                      <span className="text-sm">Bairro *</span>
+                    </div>
+                  )}
+                  {userData.cursos?.length > 0 ? (
+                    <div className="flex items-center text-yellow-600">
+                      <CheckCircle size={16} className="mr-2" />
+                      <span className="text-sm">Cursos</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-gray-400">
+                      <XCircle size={16} className="mr-2" />
+                      <span className="text-sm">Cursos</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Barra de Progresso */}
+              <div className="mt-6">
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-green-500 rounded-full h-2 transition-all duration-500"
+                    style={{ 
+                      width: `${calculateProfileCompleteness(userData)}%` 
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between mt-2">
+                  <p className="text-sm text-gray-600">
+                    {calculateProfileCompleteness(userData)}% concluído
+                  </p>
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-green-600 mr-1"></div>
+                      <span>Obrigatório</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-yellow-600 mr-1"></div>
+                      <span>Opcional</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Destaques do Profissional */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Destaques do Profissional</h3>
+              <div className="grid grid-cols-3 gap-x-6 gap-y-4">
+                {/* Coluna 1 */}
+                <div className="space-y-4">
+                  {/* Verificação */}
+                  <div className={`flex items-center ${userData.verificado ? 'text-blue-600' : 'text-gray-400'}`}>
+                    <Shield size={18} className="mr-2" />
+                    <span className="text-base">
+                      {userData.verificado ? 'Profissional Verificado' : 'Aguardando Verificação'}
+                    </span>
+                  </div>
+
+                  {/* Atendimento Online */}
+                  <div className={`flex items-center ${userData.atendimentoonline ? 'text-purple-600' : 'text-gray-400'}`}>
+                    <Video size={18} className="mr-2" />
+                    <span className="text-base">
+                      {userData.atendimentoonline ? 'Atendimento Online' : 'Sem Atendimento Online'}
+                    </span>
+                  </div>
+
+                  {/* Atendimento Emergencial */}
+                  <div className={`flex items-center ${userData.atendimentoemergencia ? 'text-red-600' : 'text-gray-400'}`}>
+                    <Zap size={18} className="mr-2" />
+                    <span className="text-base">
+                      {userData.atendimentoemergencia ? 'Atendimento Emergencial' : 'Sem Atendimento Emergencial'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Coluna 2 */}
+                <div className="space-y-4">
+                  {/* Especializações */}
+                  <div className={`flex items-center ${userData.especializacao?.length > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                    <GraduationCap size={18} className="mr-2" />
+                    <span className="text-base">
+                      {userData.especializacao?.length > 0 
+                        ? `${userData.especializacao.length} Especializações` 
+                        : 'Sem Especializações'}
+                    </span>
+                  </div>
+
+                  {/* Pós-Graduação */}
+                  <div className={`flex items-center ${userData.pos_graduacao?.length > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
+                    <GraduationCap size={18} className="mr-2" />
+                    <span className="text-base">
+                      {userData.pos_graduacao?.length > 0 
+                        ? `${userData.pos_graduacao.length} Pós-Graduações` 
+                        : 'Sem Pós-Graduação'}
+                    </span>
+                  </div>
+
+                  {/* Avaliações */}
+                  <div className={`flex items-center ${(userData.referencias || 0) >= 10 ? 'text-yellow-600' : 'text-gray-400'}`}>
+                    <Star size={18} className="mr-2" />
+                    <span className="text-base">
+                      {(userData.referencias || 0) >= 10 
+                        ? `${userData.referencias} Avaliações` 
+                        : `${userData.referencias || 0}/10 Avaliações Necessárias`}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Coluna 3 */}
+                <div className="space-y-4">
+                  {/* Instagram */}
+                  <div className={`flex items-center ${userData.instagram ? 'text-pink-600' : 'text-gray-400'}`}>
+                    <Instagram size={18} className="mr-2" />
+                    <span className="text-base">
+                      {userData.instagram 
+                        ? `@${userData.instagram}` 
+                        : 'Perfil do Instagram não informado'}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        )}
+          
+          {!isProfileComplete(userData) && (
+            <div className="mt-6 pt-4 border-t">
+              <button 
+                onClick={() => setMostrarCadastro(true)}
+                className="text-blue-600 text-sm font-medium hover:text-blue-700 flex items-center"
+              >
+                Completar cadastro
+                <ChevronRight size={16} className="ml-1" />
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Seção Admin */}
         {isAdmin && (
@@ -507,17 +860,17 @@ const Dashboard = () => {
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500">Consultas Hoje</p>
-                    <p className="text-2xl font-bold mt-1">{userData.appointments}</p>
+                    <p className="text-sm text-gray-500">Avaliações Recebidas</p>
+                    <p className="text-2xl font-bold mt-1">{userData.referencias || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
-                    <Calendar className="text-blue-500" />
+                    <Star className="text-blue-500" />
                   </div>
                 </div>
                 <div className="mt-4 flex items-center text-sm">
-                  <ChevronUp className="text-green-500 mr-1" size={16} />
-                  <span className="text-green-500">+2.5%</span>
-                  <span className="text-gray-500 ml-2">vs. última semana</span>
+                  <Star className="text-yellow-400 mr-1" size={16} />
+                  <span className="text-yellow-500">{userData.pontuacao || 0}</span>
+                  <span className="text-gray-500 ml-2">média geral</span>
                 </div>
               </div>
 
@@ -569,82 +922,15 @@ const Dashboard = () => {
                 <div className="mt-4">
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
-                      className="bg-green-500 rounded-full h-2"
-                      style={{ width: `${userData.completionRate}%` }}
+                      className="bg-green-500 rounded-full h-2 transition-all duration-500"
+                      style={{ 
+                        width: `${calculateProfileCompleteness(userData)}%` 
+                      }}
                     />
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
-                    {userData.completionRate}% completo
+                    {calculateProfileCompleteness(userData)}% completo
                   </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Statistics Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              {/* Income Stats */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold mb-4">Rendimentos</h3>
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-gray-600">Total Mensal</p>
-                  <p className="text-2xl font-bold">R$ {userData.stats.income.toLocaleString()}</p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-gray-600">Consultas Realizadas</p>
-                  <p className="text-xl">{userData.stats.appointmentsCompleted}</p>
-                </div>
-              </div>
-
-              {/* Reviews Stats */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold mb-4">Avaliações</h3>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-3xl font-bold">{userData.stats.averageRating}</p>
-                    <p className="text-sm text-gray-500">média geral</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold">{userData.stats.totalReviews}</p>
-                    <p className="text-sm text-gray-500">avaliações</p>
-                  </div>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-yellow-400 rounded-full h-2"
-                    style={{ width: `${(userData.stats.averageRating / 5) * 100}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Activity */}
-            <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
-              <h3 className="text-lg font-semibold mb-4">Atividades Recentes</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                      <Calendar className="text-blue-500 w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Nova consulta agendada</p>
-                      <p className="text-sm text-gray-500">Paciente: Maria Silva</p>
-                    </div>
-                  </div>
-                  <span className="text-sm text-gray-500">Há 2 horas</span>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
-                      <Activity className="text-green-500 w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Avaliação recebida</p>
-                      <p className="text-sm text-gray-500">5 estrelas - João Santos</p>
-                    </div>
-                  </div>
-                  <span className="text-sm text-gray-500">Há 5 horas</span>
                 </div>
               </div>
             </div>
@@ -654,6 +940,19 @@ const Dashboard = () => {
 
       {mostrarCadastro && <CadastroModal onClose={() => setMostrarCadastro(false)} />}
       <SpeedInsights />
+
+      {/* Footer */}
+      <footer className="bg-white border-t mt-12">
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+           <p className="text-center text-gray-500 text-sm">
+             Desenvolvido por{' '}
+             <a href="#" className="text-blue-600 hover:text-blue-500">
+               Simões Tecnologia da Informação
+             </a>
+           </p>
+         </div>
+       </footer>
+
     </div>
   );
 };
