@@ -23,33 +23,37 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
   const analyzeText = async (text) => {
     setIsAnalyzing(true);
     setShowSuggestions(true);
-
+   
     try {
-      // First try DeepSeek API
       const response = await fetch('https://serviamapp-server.vercel.app/api/smart-search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({ prompt: text })
       });
-
+   
       if (response.ok) {
         const data = await response.json();
-        setSearchResults(data.professionals);
-        onSearch(data.professionals);
+        console.log('Search response:', data);
+        
+        if (data.professionals?.length > 0) {
+          setSearchResults(data.professionals);
+          onSearch(data.professionals);
+        } else {
+          fallbackSearch(text);
+        }
       } else {
-        // Fallback to local search if API fails
         fallbackSearch(text);
       }
     } catch (error) {
-      console.error('ChatGPT search failed:', error);
+      console.error('Search failed:', error);
       fallbackSearch(text);
     } finally {
       setIsAnalyzing(false);
     }
-  };
-
+   };
   // Existing local search as fallback
   const fallbackSearch = (text) => {
     const expandedTerms = expandSearchTerms(text);
