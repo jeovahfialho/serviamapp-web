@@ -132,16 +132,22 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
   return (
     <div className="space-y-3">
       <div className="relative">
+        <div className="flex items-center gap-2 mb-2">
+          <Sparkles className="h-4 w-4 text-indigo-500" />
+          <span className="text-sm text-indigo-600 font-medium">
+            Busca com IA: Descreva livremente o que procura
+          </span>
+        </div>
         <textarea
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          placeholder="Descreva o que você está procurando..."
-          className="w-full p-3 pr-10 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none h-20 text-sm"
+          placeholder="Ex: 'Procuro alguém para ajudar com ansiedade e problemas de relacionamento' ou 'Preciso de acompanhamento para meu filho adolescente'"
+          className="w-full p-3 pr-10 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none h-24 text-sm"
         />
         {searchText && (
           <button
             onClick={handleClear}
-            className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-3 top-10 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -151,15 +157,19 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
       <div className="flex gap-2">
         <button
           onClick={() => analyzeText(searchText)}
-          className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-colors flex items-center justify-center gap-2"
+          className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-colors flex items-center justify-center gap-2 relative overflow-hidden group"
           disabled={isAnalyzing}
         >
           {isAnalyzing ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+              <span>Analisando sua busca...</span>
+            </div>
           ) : (
             <>
               <Brain className="h-4 w-4" />
-              <span>Buscar</span>
+              <span>Buscar com IA</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-400/0 via-purple-400/10 to-purple-400/0 transform translate-x-[-200%] animate-shimmer group-hover:translate-x-[200%] transition-all duration-1000" />
             </>
           )}
         </button>
@@ -176,7 +186,12 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
 
       {showSuggestions && relevantSuggestions.length > 0 && (
         <div className="mt-3">
-          <p className="text-sm text-gray-600 mb-2">Profissionais relacionados:</p>
+          <div className="flex items-center gap-2 mb-3">
+            <Brain className="h-4 w-4 text-indigo-500" />
+            <p className="text-sm text-indigo-600 font-medium">
+              Profissionais recomendados pela IA:
+            </p>
+          </div>
           <div className="flex flex-col gap-2">
             {relevantSuggestions.map((prof) => {
               const emoji = prof.tipo?.toLowerCase().includes('psico') ? '🧠' :
