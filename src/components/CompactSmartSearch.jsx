@@ -43,7 +43,7 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
         fallbackSearch(text);
       }
     } catch (error) {
-      console.error('DeepSeek search failed:', error);
+      console.error('ChatGPT search failed:', error);
       fallbackSearch(text);
     } finally {
       setIsAnalyzing(false);
