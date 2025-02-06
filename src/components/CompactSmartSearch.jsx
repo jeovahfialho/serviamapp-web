@@ -14,7 +14,7 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
     'emocional': ['sentimentos', 'emoções', 'afeto', 'humor'],
     'stress': ['estresse', 'tensão', 'pressão', 'burnout']
   };
-  
+
   const [searchText, setSearchText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
@@ -26,7 +26,7 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
 
     try {
       // First try DeepSeek API
-      const response = await fetch('/api/smart-search', {
+      const response = await fetch('https://serviamapp-server.vercel.app/api/smart-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: text })
