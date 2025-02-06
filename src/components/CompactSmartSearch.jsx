@@ -3,6 +3,18 @@ import { Brain, X } from 'lucide-react';
 import _ from 'lodash';
 
 const CompactSmartSearch = ({ profissionais, onSearch }) => {
+
+  const mentalHealthTerms = {
+    'depressão': ['tristeza', 'humor', 'melancolia', 'desânimo', 'terapia'],
+    'ansiedade': ['nervosismo', 'pânico', 'preocupação', 'angústia', 'medo'],
+    'casamento': ['relacionamento', 'casal', 'família', 'conjugal', 'matrimonial'],
+    'terapia': ['psicoterapia', 'aconselhamento', 'tratamento', 'acompanhamento'],
+    'trauma': ['estresse', 'ptsd', 'abuso', 'violência'],
+    'comportamento': ['conduta', 'hábitos', 'atitude', 'psychological'],
+    'emocional': ['sentimentos', 'emoções', 'afeto', 'humor'],
+    'stress': ['estresse', 'tensão', 'pressão', 'burnout']
+  };
+  
   const [searchText, setSearchText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
