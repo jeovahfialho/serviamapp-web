@@ -28,7 +28,13 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
       // First try DeepSeek API
       const response = await fetch('https://serviamapp-server.vercel.app/api/smart-search', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET,OPTIONS,POST,PUT,DELETE,PATCH',
+          'Access-Control-Allow-Headers': 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+        },
         body: JSON.stringify({ prompt: text })
       });
 
