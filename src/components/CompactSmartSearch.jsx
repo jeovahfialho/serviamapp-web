@@ -30,10 +30,6 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,PATCH',
-          'Access-Control-Allow-Headers': 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
         },
         body: JSON.stringify({ prompt: text })
       });
@@ -47,7 +43,7 @@ const CompactSmartSearch = ({ profissionais, onSearch }) => {
         fallbackSearch(text);
       }
     } catch (error) {
-      console.error('DeepSeek search failed:', error);
+      console.error('ChatGPT search failed:', error);
       fallbackSearch(text);
     } finally {
       setIsAnalyzing(false);
