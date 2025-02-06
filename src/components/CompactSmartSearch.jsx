@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Brain, X } from 'lucide-react';
+import { Brain, X, Sparkles } from 'lucide-react';
 import _ from 'lodash';
 
 const CompactSmartSearch = ({ profissionais, onSearch }) => {
