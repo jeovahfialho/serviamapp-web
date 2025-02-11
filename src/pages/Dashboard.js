@@ -44,7 +44,6 @@ const Dashboard = () => {
   const calculateProfileCompleteness = (userData) => {
     const requiredFields = [
       'cpf',
-      'especializacao',
       'graduacao',
       'atuacao',
       'email',
@@ -58,6 +57,7 @@ const Dashboard = () => {
     
     const optionalFields = [
       'pos_graduacao',
+      'especializacao',
       'cursos',
       'instagram',
       'faixa_etaria',
@@ -76,8 +76,8 @@ const Dashboard = () => {
         completedOptional++;
     });
   
-    const requiredWeight = 0.7;
-    const optionalWeight = 0.3;
+    const requiredWeight = 0.8;
+    const optionalWeight = 0.2;
   
     const requiredScore = (completedRequired / requiredFields.length) * requiredWeight;
     const optionalScore = (completedOptional / optionalFields.length) * optionalWeight;
@@ -85,7 +85,7 @@ const Dashboard = () => {
     return Math.round((requiredScore + optionalScore) * 100);
   };
   
-  const isProfileComplete = (userData) => calculateProfileCompleteness(userData) === 100;
+  const isProfileComplete = (userData) => calculateProfileCompleteness(userData) === 87;
 
   // Função para verificar se é admin
   const checkIsAdmin = (userPhone) => {
@@ -518,7 +518,7 @@ const Dashboard = () => {
                   ) : (
                     <div className="flex items-center text-gray-400">
                       <XCircle size={16} className="mr-2" />
-                      <span className="text-sm">Especialização *</span>
+                      <span className="text-sm">Especialização</span>
                     </div>
                   )}
                   {userData.pos_graduacao?.length > 0 ? (

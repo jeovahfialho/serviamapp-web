@@ -69,19 +69,7 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
 
   return (
     <div className="space-y-6">
-      {/* Busca Inteligente */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        <h3 className="font-semibold text-lg mb-4 flex items-center">
-          <Brain className="h-5 w-5 text-indigo-500 mr-2" />
-          Encontre seu Especialista
-        </h3>
-        <div className="space-y-4">
-          <CompactSmartSearch 
-            profissionais={profissionais}
-            onSearch={(results) => setProfissionaisFiltrados(results)}
-          />
-        </div>
-      </div>
+
 
       {/* Profissionais Destaque */}
       <div className="bg-white rounded-2xl shadow-md p-6">
