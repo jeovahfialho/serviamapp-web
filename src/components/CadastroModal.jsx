@@ -36,6 +36,138 @@ const CadastroModal = ({ onClose }) => {
     const [estados, setEstados] = useState([]);
     const [cidades, setCidades] = useState([]);
 
+    // New state for validation errors
+    const [validationErrors, setValidationErrors] = useState({
+      step1: {},
+      step2: {},
+      step3: {},
+      step4: {},
+      step5: {}
+    });
+
+    // Validation functions for each step
+    const validateStep1 = () => {
+
+      const errors = {};
+
+      // Validate required fields
+      if (!formData.cpf || formData.cpf.trim() === '') {
+        errors.cpf = 'CPF é obrigatório';
+      }
+
+      if (!formData.email || !formData.email.trim().includes('@')) {
+        errors.email = 'E-mail válido é obrigatório';
+      }
+
+      if (!formData.tipo || formData.tipo.trim() === '') {
+        errors.tipo = 'Categoria é obrigatória';
+      }
+
+      if (!formData.nome || formData.nome.trim() === '') {
+        errors.nome = 'Nome completo é obrigatório';
+      }
+
+      if (!formData.telefone || formData.telefone.trim() === '') {
+        errors.telefone = 'Telefone é obrigatório';
+      }
+      
+
+      if (!formData.sexo || formData.sexo.trim() === '') {
+        errors.sexo = 'Sexo é obrigatório';
+      }
+
+      if (!formData.foto) {
+        errors.foto = 'Foto do profissional é obrigatória';
+      }
+
+      return errors;
+    };
+
+    const validateStep2 = () => {
+      const errors = {};
+
+      // Validate graduação
+      if (!formData.graduacao || formData.graduacao.every(g => g.trim() === '')) {
+        errors.graduacao = 'Pelo menos uma graduação é obrigatória';
+      }
+
+      return errors;
+    };
+
+    const validateStep3 = () => {
+      const errors = {};
+
+      // Validate atuação
+      if (!formData.atuacao || formData.atuacao.every(a => a.trim() === '')) {
+        errors.atuacao = 'Pelo menos uma área de atuação é obrigatória';
+      }
+
+      return errors;
+    };
+
+    const validateStep4 = () => {
+      const errors = {};
+
+      // Validate localização
+      if (!formData.estado || formData.estado.trim() === '') {
+        errors.estado = 'Estado é obrigatório';
+      }
+
+      if (!formData.cidade || formData.cidade.trim() === '') {
+        errors.cidade = 'Cidade é obrigatória';
+      }
+
+      if (!formData.bairro || formData.bairro.trim() === '') {
+        errors.bairro = 'Bairro/Região é obrigatório';
+      }
+
+      // Validate at least one type of service
+      if (!formData.atendimentoonline && !formData.atendimentoemergencia && !formData.atendimentopresencial) {
+        errors.atendimento = 'Selecione pelo menos uma forma de atendimento';
+      }
+
+      // Validate at least one age group
+      if (!formData.faixa_etaria || formData.faixa_etaria.length === 0) {
+        errors.faixa_etaria = 'Selecione pelo menos uma faixa etária';
+      }
+
+      return errors;
+    };
+
+    // Validate current step before moving to next
+    const validateAndProceed = () => {
+      let errors = {};
+      switch (step) {
+        case 1:
+          errors = validateStep1();
+          break;
+        case 2:
+          errors = validateStep2();
+          break;
+        case 3:
+          errors = validateStep3();
+          break;
+        case 4:
+          errors = validateStep4();
+          break;
+      }
+
+      // Update validation errors
+      setValidationErrors(prev => ({
+        ...prev,
+        [`step${step}`]: errors
+      }));
+
+      // If no errors, proceed to next step or submit
+      if (Object.keys(errors).length === 0) {
+        if (step < steps.length) {
+          nextStep();
+        } else {
+          handleSubmit();
+        }
+      }
+    };
+
     // Função para renderizar campo de bairro
     const renderBairroField = () => {
       if (formData.estado === 'DF') {
@@ -465,7 +597,7 @@ const CadastroModal = ({ onClose }) => {
                 <div className="col-span-2">
                   <div className="flex justify-between items-center mb-2">
                     <label className="block text-sm font-medium text-gray-700">
-                      Especializações
+                      Especialidades
                     </label>
                     <button
                       type="button"
@@ -477,7 +609,7 @@ const CadastroModal = ({ onClose }) => {
                       }}
                       className="text-sm text-blue-600 hover:text-blue-700"
                     >
-                      + Adicionar Especialização
+                      + Adicionar Especialidade
                     </button>
                   </div>
                   {formData.especializacao.map((esp, index) => (
@@ -515,6 +647,19 @@ const CadastroModal = ({ onClose }) => {
                   ))}
                 </div>
               </div>
+              {/* Add error message display */}
+              {Object.keys(validationErrors.step1).length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <p className="text-red-700 text-sm font-medium">
+                    Por favor, preencha todos os campos obrigatórios:
+                  </p>
+                  <ul className="list-disc list-inside text-red-600 text-sm mt-2">
+                    {Object.values(validationErrors.step1).map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           );
         case 2:
@@ -685,6 +830,18 @@ const CadastroModal = ({ onClose }) => {
                   </div>
                 </div>
               </div>
+              {Object.keys(validationErrors.step2).length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <p className="text-red-700 text-sm font-medium">
+                    Por favor, preencha todos os campos obrigatórios:
+                  </p>
+                  <ul className="list-disc list-inside text-red-600 text-sm mt-2">
+                    {Object.values(validationErrors.step2).map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           );
         case 3:
@@ -845,6 +1002,18 @@ const CadastroModal = ({ onClose }) => {
                   </div>
                 </div>
               </div>
+              {Object.keys(validationErrors.step3).length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <p className="text-red-700 text-sm font-medium">
+                    Por favor, preencha todos os campos obrigatórios:
+                  </p>
+                  <ul className="list-disc list-inside text-red-600 text-sm mt-2">
+                    {Object.values(validationErrors.step3).map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           );
         case 4:
@@ -855,14 +1024,12 @@ const CadastroModal = ({ onClose }) => {
                 {/* Lado esquerdo - Tipos de Atendimento */}
                 
                 <div className="space-y-4">
-                <h3 className="text-lg font-medium mb-2">Formas</h3>
+                <h3 className="text-lg font-medium mb-2">Formas de Atendimento</h3>
                   <div className="flex items-center">
                     <input
                       type="checkbox"
                       checked={formData.atendimentoonline}
                       onChange={(e) => {
-                        console.log('Atendimento Online antes:', formData.atendimentonline);
-                        console.log('Novo valor:', e.target.checked);
                         setFormData((prev) => ({
                           ...prev,
                           atendimentoonline: e.target.checked
@@ -882,7 +1049,7 @@ const CadastroModal = ({ onClose }) => {
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          atendimentomergencia: e.target.checked
+                          atendimentoemergencia: e.target.checked
                         }))
                       }
                       className="h-4 w-4 text-blue-600 rounded border-gray-300"
@@ -1002,6 +1169,18 @@ const CadastroModal = ({ onClose }) => {
                 {renderBairroField()}
               </div>
             </div>
+            {Object.keys(validationErrors.step4).length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <p className="text-red-700 text-sm font-medium">
+                    Por favor, preencha todos os campos obrigatórios:
+                  </p>
+                  <ul className="list-disc list-inside text-red-600 text-sm mt-2">
+                    {Object.values(validationErrors.step4).map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           );
         case 5:
@@ -1134,8 +1313,7 @@ const CadastroModal = ({ onClose }) => {
               Voltar
             </button>
             <button
-              onClick={step === steps.length ? handleSubmit : nextStep}
-              disabled={step === steps.length && (!lgpdConsent.dataProcessing || !lgpdConsent.marketplaceUsage)}
+              onClick={validateAndProceed}
               className={`px-4 py-2 rounded-lg text-white flex items-center justify-center gap-2 transition-colors ${
                 step === steps.length 
                   ? ((!lgpdConsent.dataProcessing || !lgpdConsent.marketplaceUsage)
@@ -1144,23 +1322,7 @@ const CadastroModal = ({ onClose }) => {
                   : 'bg-blue-600 hover:bg-blue-700'
               }`}
             >
-              {step === steps.length ? (
-                <>
-                  {isSubmitting ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Processando...
-                    </>
-                  ) : (
-                    'Concluir'
-                  )}
-                </>
-              ) : (
-                'Próximo'
-              )}
+              {step === steps.length ? 'Concluir' : 'Próximo'}
             </button>
           </div>
         </div>

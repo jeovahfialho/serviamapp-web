@@ -24,7 +24,7 @@ const App = () => {
         } />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/profissional/:id" element={<ProfessionalPage />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/marketplace" replace />} />
       </Routes>
     </Router>
   );

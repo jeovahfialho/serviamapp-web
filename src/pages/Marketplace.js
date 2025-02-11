@@ -10,7 +10,10 @@ import { AiOutlineInstagram } from 'react-icons/ai';
 import ServianLogoText from '../components/ServianLogoText';
 import SideComponents from '../components/SideComponents';
 import { Analytics } from "@vercel/analytics/react"
+import SmartSearch from '../components/SmartSearch'; // Import the new SmartSearch component
 import ReviewsModal from '../components/ReviewsModal'; // Ajuste o caminho conforme sua estrutura
+import Comment_ from 'postcss/lib/comment';
+import CompactSmartSearch from '../components/CompactSmartSearch';
 
 
 const MarketplacePage = () => {
@@ -313,14 +316,12 @@ const faixasEtariasDisponiveis = [
           {/* Coluna Principal com Cards dos Profissionais */}
           <div className="lg:col-span-2 xl:col-span-3">
             {/* Banner/Hero Section */}
-            <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-8 mb-8 text-white">
-              <h1 className="text-3xl font-bold mb-4">
-                Encontre os Melhores Profissionais
-              </h1>
-              <p className="text-lg opacity-90">
-                Conectamos você aos melhores especialistas em saúde e bem-estar
-              </p>
-            </div>
+            <CompactSmartSearch
+            profissionais={profissionais} 
+            onSearch={(results) => {
+              // Handle search results
+              setProfissionaisFiltrados(results);
+            }}  />
 
             {/* Painel de Filtros Avançados */}
             {mostrarFiltros && (
