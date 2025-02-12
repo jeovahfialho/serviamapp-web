@@ -70,7 +70,82 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
   return (
     <div className="space-y-6">
 
+      {/* Profissionais Verificados */}
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <h3 className="font-semibold text-lg mb-4 flex items-center">
+          <MdVerified className="h-5 w-5 text-blue-500 mr-2" />
+          Profissionais Verificados
+        </h3>
+        <div className="space-y-4">
+          {profissionaisFiltrados
+            .filter(prof => prof.verificado === true)
+            .slice(0, 3)
+            .map(prof => (
+              <a 
+                key={prof.id}
+                href={`/profissional/${prof.id}`}
+                className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer block"
+              >
+                {prof.foto ? (
+                  <img src={prof.foto} alt={prof.nome} className="h-12 w-12 rounded-full object-cover" />
+                ) : (
+                  <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <Users className="h-6 w-6 text-blue-600" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm">{prof.nome}</p>
+                    <MdVerified className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <p className="text-sm text-gray-500">{prof.tipo}</p>
+                  
+                  {/* Especializações */}
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {prof.especializacao?.slice(0, 2).map((esp, index) => (
+                      <span 
+                        key={index}
+                        className="px-2 py-0.5 text-xs bg-blue-50 text-blue-600 rounded-full"
+                      >
+                        {esp}
+                      </span>
+                    ))}
+                    {prof.especializacao?.length > 2 && (
+                      <span className="text-xs text-gray-500">
+                        +{prof.especializacao.length - 2}
+                      </span>
+                    )}
+                  </div>
 
+                  {/* Áreas de Atuação */}
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {prof.atuacao?.slice(0, 4).map((area, index) => (
+                      <span 
+                        key={index}
+                        className="px-2 py-0.5 text-xs bg-green-50 text-green-600 rounded-full"
+                      >
+                        {area}
+                      </span>
+                    ))}
+                    {prof.atuacao?.length > 4 && (
+                      <span className="text-xs text-gray-500">
+                        +{prof.atuacao.length - 4}
+                      </span>
+                    )}
+                  </div>
+
+                  {prof.pontuacao > 0 && (
+                    <div className="flex items-center mt-1">
+                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                      <span className="text-sm text-gray-600 ml-1">{prof.pontuacao}</span>
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+        </div>
+      </div>
+      
       {/* Profissionais Destaque */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h3 className="font-semibold text-lg mb-4 flex items-center">

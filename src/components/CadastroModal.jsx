@@ -28,7 +28,7 @@ const bairrosBrasilia = [
 
 
 // Registration Modal Component
-const CadastroModal = ({ onClose }) => {
+const CadastroModal = ({ onClose, initialData  }) => {
     const [step, setStep] = useState(1);
     const [isSuccess, setIsSuccess] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -239,30 +239,30 @@ const CadastroModal = ({ onClose }) => {
     });
   
     const [formData, setFormData] = useState({
-      tipo: '',
-      nome: '',
-      cpf: '',
-      email: '',
-      foto: null,
-      registro: '',
-      telefone: '',
-      especializacao: [''],
-      graduacao: [''],
-      pos_graduacao: [''],
-      cursos: [''],
-      atuacao: [''],
-      valor: '',
-      planos: ['Particular'],
-      atendimentoonline: false,
-      atendimentoemergencia: false,
-      atendimentopresencial: false,
-      faixa_etaria: [''],
-      status: 'pending',
-      instagram: '',         // novo campo
-      sexo: '',             // novo campo
-      bairro: '',           // novo campo
-      cidade: '',           // novo campo
-      estado: ''            // novo campo
+      tipo: initialData?.tipo || '',
+      nome: initialData?.nome || '',
+      cpf: initialData?.cpf || '',
+      email: initialData?.email || '',
+      foto: initialData?.foto || null,
+      registro: initialData?.registro || '',
+      telefone: initialData?.telefone || '',
+      especializacao: initialData?.especializacao || [''],
+      graduacao: initialData?.graduacao || [''],
+      pos_graduacao: initialData?.pos_graduacao || [''],
+      cursos: initialData?.cursos || [''],
+      atuacao: initialData?.atuacao || [''],
+      valor: initialData?.valor || '',
+      planos: initialData?.planos || ['Particular'],
+      atendimentoonline: initialData?.atendimentoonline || false,
+      atendimentoemergencia: initialData?.atendimentoemergencia || false,
+      atendimentopresencial: initialData?.atendimentopresencial || false,
+      faixa_etaria: initialData?.faixa_etaria || [''],
+      status: initialData?.status || 'pending',
+      instagram: initialData?.instagram || '',
+      sexo: initialData?.sexo || '',
+      bairro: initialData?.bairro || '',
+      cidade: initialData?.cidade || '',
+      estado: initialData?.estado || ''
     });
   
     const handlePhotoUpload = async (event) => {
@@ -583,7 +583,7 @@ const CadastroModal = ({ onClose }) => {
   
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Telefone
+                    Telefone Profissional
                   </label>
                   <input
                     type="tel"
@@ -1085,7 +1085,8 @@ const CadastroModal = ({ onClose }) => {
                       "crianças",
                       "adolescentes", 
                       "adultos", 
-                      "idosos"
+                      "idosos",
+                      "casais e família"
                     ].map((faixa) => (
                       <div key={faixa} className="flex items-center">
                         <input

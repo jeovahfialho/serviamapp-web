@@ -8,6 +8,7 @@ import {
 import ServianLogoText from '../components/ServianLogoText';
 import ServianLogo from '../components/ServianLogo';
 import CadastroModal from '../components/CadastroModal';
+import TabelaProfissionais from '../components/TabelaProfissionais';
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react"
 
@@ -89,7 +90,7 @@ const Dashboard = () => {
 
   // Função para verificar se é admin
   const checkIsAdmin = (userPhone) => {
-    return userPhone === '61981733598';
+    return userPhone === '61981733598' || userPhone === '61991218998';
   };
 
   const ActionMenu = () => {
@@ -432,7 +433,7 @@ const Dashboard = () => {
       <div className="pt-16 px-4 md:px-8">
         {/* Profile Completion Card */}
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6 mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Profile Completion */}
             {/* Status do Cadastro */}
             <div>
@@ -614,7 +615,7 @@ const Dashboard = () => {
             {/* Destaques do Profissional */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Destaques do Profissional</h3>
-              <div className="grid grid-cols-3 gap-x-6 gap-y-4">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 {/* Coluna 1 */}
                 <div className="space-y-4">
                   {/* Verificação */}
@@ -706,151 +707,18 @@ const Dashboard = () => {
 
         {/* Seção Admin */}
         {isAdmin && (
-          <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
-            <h3 className="text-lg font-semibold mb-4">Lista de Profissionais</h3>
-            <ActionMenu />
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3">
-                      <input
-                        type="checkbox"
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedRows(new Set(profissionais.map(p => p.id)));
-                          } else {
-                            setSelectedRows(new Set());
-                          }
-                        }}
-                        checked={selectedRows.size === profissionais.length && profissionais.length > 0}
-                        className="rounded border-gray-300 text-blue-600"
-                      />
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Nome
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Categoria
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Instagram
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Áreas de Atuação
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Verificado
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {profissionais.map((prof) => (
-                    <React.Fragment key={prof.id}>
-                      <tr 
-                        className="hover:bg-gray-50 cursor-pointer"
-                        
-                      >
-                        <td className="px-6 py-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedRows.has(prof.id)}
-                            onChange={(e) => {
-                              const newSelected = new Set(selectedRows);
-                              if (e.target.checked) {
-                                newSelected.add(prof.id);
-                              } else {
-                                newSelected.delete(prof.id);
-                              }
-                              setSelectedRows(newSelected);
-                            }}
-                            className="rounded border-gray-300 text-blue-600"
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap" onClick={() => toggleRow(prof.id)}>
-                          <div className="flex items-center">
-                            <div className="text-sm font-medium text-gray-900">{prof.nome}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {prof.tipo}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {prof.instagram}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap gap-1">
-                            {prof.atuacao?.map((area, idx) => (
-                              <span 
-                                key={idx}
-                                className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded"
-                              >
-                                {area}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            prof.verificado ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {prof.verificado ? 'Sim' : 'Não'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(prof.status)} text-white`}>
-                            {getStatusText(prof.status)}
-                          </span>
-                        </td>
-                      </tr>
-                      {expandedRows.has(prof.id) && (
-                        <tr className="bg-gray-50">
-                          <td colSpan="6" className="px-6 py-4">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <p className="font-medium">Dados Pessoais</p>
-                                <p className="text-sm">Email: {prof.email}</p>
-                                <p className="text-sm">Telefone: {prof.telefone}</p>
-                                <p className="text-sm">CPF: {prof.cpf}</p>
-                              </div>
-                              <div>
-                                <p className="font-medium">Localização</p>
-                                <p className="text-sm">Cidade: {prof.cidade}</p>
-                                <p className="text-sm">Estado: {prof.estado}</p>
-                                <p className="text-sm">Bairro: {prof.bairro}</p>
-                              </div>
-                              <div>
-                                <p className="font-medium">Formação</p>
-                                <div className="text-sm">
-                                  <p className="font-medium text-sm mt-1">Graduação:</p>
-                                  {prof.graduacao?.map((grad, idx) => (
-                                    <p key={idx}>{grad}</p>
-                                  ))}
-                                  <p className="font-medium text-sm mt-1">Pós-Graduação:</p>
-                                  {prof.pos_graduacao?.map((pos, idx) => (
-                                    <p key={idx}>{pos}</p>
-                                  ))}
-                                </div>
-                              </div>
-                              <div>
-                                <p className="font-medium">Especializações</p>
-                                {prof.especializacao?.map((esp, idx) => (
-                                  <p key={idx} className="text-sm">{esp}</p>
-                                ))}
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <TabelaProfissionais 
+            profissionais={profissionais}
+            selectedRows={selectedRows}
+            setSelectedRows={setSelectedRows}
+            expandedRows={expandedRows}
+            toggleRow={toggleRow}
+            getStatusColor={getStatusColor}
+            getStatusText={getStatusText}
+            updateStatus={updateStatus}
+            toggleVerificado={toggleVerificado}
+            fetchProfissionais={fetchProfissionais}
+          />
         )}
 
         {/* Status Cards - Only show when profile is complete */}
@@ -938,7 +806,12 @@ const Dashboard = () => {
         )}
       </div>
 
-      {mostrarCadastro && <CadastroModal onClose={() => setMostrarCadastro(false)} />}
+      {mostrarCadastro && (
+        <CadastroModal 
+          onClose={() => setMostrarCadastro(false)} 
+          initialData={userData} // Passando os dados atuais
+        />
+      )}
       <SpeedInsights />
 
       {/* Footer */}
