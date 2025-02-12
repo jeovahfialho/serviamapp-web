@@ -1,9 +1,10 @@
 // Dashboard.jsx
 import React, { useState, useEffect } from 'react';
+import { MdVerified } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { 
-  User, ChevronDown, LogOut, Calendar, Users, Clock, AlertCircle, ChevronUp, Activity,
-  CheckCircle, XCircle, Star, Shield, Video, Zap, GraduationCap, ChevronRight, Instagram 
+  User, ChevronDown, LogOut, Clock, AlertCircle, ChevronUp, Activity, XCircle, Shield, Video, Zap, GraduationCap, ChevronRight, Instagram, Star, Building, Award, MapPin,
+  Mail, Phone, DollarSign, Users, CheckCircle, Calendar
 } from 'lucide-react';
 import ServianLogoText from '../components/ServianLogoText';
 import ServianLogo from '../components/ServianLogo';
@@ -721,84 +722,279 @@ const Dashboard = () => {
           />
         )}
 
-        {/* Status Cards - Only show when profile is complete */}
-        {!isProfileIncomplete && (
+{!isProfileIncomplete && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Avaliações Recebidas</p>
-                    <p className="text-2xl font-bold mt-1">{userData.referencias || 0}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
-                    <Star className="text-blue-500" />
-                  </div>
+            {/* Hero Section */}
+            <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:p-8 mt-6">
+              <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+                {/* Foto */}
+                <div className="flex-shrink-0 flex justify-center md:justify-start">
+                  {userData.foto ? (
+                    <img
+                      src={userData.foto}
+                      alt={userData.nome}
+                      className="h-24 w-24 sm:h-32 sm:w-32 rounded-2xl object-cover"
+                    />
+                  ) : (
+                    <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                      <User className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600" />
+                    </div>
+                  )}
                 </div>
-                <div className="mt-4 flex items-center text-sm">
-                  <Star className="text-yellow-400 mr-1" size={16} />
-                  <span className="text-yellow-500">{userData.pontuacao || 0}</span>
-                  <span className="text-gray-500 ml-2">média geral</span>
-                </div>
-              </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Total de Pacientes</p>
-                    <p className="text-2xl font-bold mt-1">{userData.patients}</p>
+                {/* Info */}
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start gap-2 sm:gap-3 mb-2 flex-wrap">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{userData.nome}</h1>
+                    {userData.verificado && (
+                      <MdVerified className="h-6 w-6 sm:h-7 sm:w-7 text-blue-500" />
+                    )}
                   </div>
-                  <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center">
-                    <Users className="text-purple-500" />
-                  </div>
-                </div>
-                <div className="mt-4 flex items-center text-sm">
-                  <ChevronUp className="text-green-500 mr-1" size={16} />
-                  <span className="text-green-500">+5.2%</span>
-                  <span className="text-gray-500 ml-2">vs. último mês</span>
-                </div>
-              </div>
+                  <p className="text-base sm:text-lg text-blue-600 font-medium mb-1">{userData.tipo}</p>
+                  <p className="text-sm sm:text-base text-gray-600 mb-4">{userData.registro}</p>
+                  
+                  <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                    <div className="flex items-center group hover:bg-gray-50 rounded-lg px-3 py-2 transition-colors">
+                      <Star className="h-5 w-5 text-yellow-400 group-hover:scale-110 transition-transform" />
+                      <span className="ml-1 font-medium">{userData.pontuacao || 0}</span>
+                      <span className="mx-1 text-gray-300">•</span>
+                      <span className="text-gray-600">
+                        {userData.referencias || 0} {userData.referencias === 1 ? 'avaliação' : 'avaliações'}
+                      </span>
+                    </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Lista de Espera</p>
-                    <p className="text-2xl font-bold mt-1">{userData.waitingList}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center">
-                    <Clock className="text-orange-500" />
-                  </div>
-                </div>
-                <div className="mt-4 flex items-center text-sm">
-                  <span className="text-gray-500">Pacientes aguardando</span>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Status do Cadastro</p>
-                    <div className="flex items-center mt-1">
-                      <div className={`w-2 h-2 rounded-full ${getStatusColor(userData.status)} mr-2`} />
-                      <p className="font-medium">{getStatusText(userData.status)}</p>
+                    <div className="text-xl font-bold text-gray-900">
+                      {Number(userData.valor) === 0 
+                        ? "Valor a Consultar" 
+                        : `R$ ${Number(userData.valor).toFixed(2)}`
+                      }
                     </div>
                   </div>
-                  <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center">
-                    <Activity className="text-green-500" />
+                </div>
+
+                {/* Status */}
+                <div className="w-full md:w-auto mt-4 md:mt-0 flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className={`w-2 h-2 rounded-full ${getStatusColor(userData.status)}`} />
+                    <span className="text-gray-600">Status: {getStatusText(userData.status)}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                    <span className="text-gray-600">
+                      Perfil {calculateProfileCompleteness(userData)}% completo
+                    </span>
                   </div>
                 </div>
-                <div className="mt-4">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-green-500 rounded-full h-2 transition-all duration-500"
-                      style={{ 
-                        width: `${calculateProfileCompleteness(userData)}%` 
-                      }}
-                    />
+              </div>
+            </div>
+
+            {/* Grid de Informações */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+              {/* Formação */}
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Building className="h-6 w-6 text-blue-600" />
+                  <h2 className="text-xl font-semibold text-gray-800">Formação</h2>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Graduação */}
+                  {userData.graduacao?.length > 0 && (
+                    <div>
+                      <h3 className="font-medium text-gray-800 mb-2">Graduação</h3>
+                      <ul className="space-y-2">
+                        {userData.graduacao.map((grad, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <Building className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                            <span className="text-gray-600">{grad}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Pós-Graduação */}
+                  {userData.pos_graduacao?.length > 0 && (
+                    <div>
+                      <h3 className="font-medium text-gray-800 mb-2">Pós-Graduação</h3>
+                      <ul className="space-y-2">
+                        {userData.pos_graduacao.map((pos, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <Award className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                            <span className="text-gray-600">{pos}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Cursos */}
+                  {userData.cursos?.length > 0 && (
+                    <div>
+                      <h3 className="font-medium text-gray-800 mb-2">Cursos</h3>
+                      <ul className="space-y-2">
+                        {userData.cursos.map((curso, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <CheckCircle className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                            <span className="text-gray-600">{curso}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Especialização e Atuação */}
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Award className="h-6 w-6 text-blue-600" />
+                  <h2 className="text-xl font-semibold text-gray-800">Especialização e Atuação</h2>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Especializações */}
+                  {userData.especializacao?.length > 0 && (
+                    <div>
+                      <h3 className="font-medium text-gray-800 mb-2">Especialidadesm</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {userData.especializacao.map((esp, index) => (
+                          <span key={index} className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-sm">
+                            {esp}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Áreas de Atuação */}
+                  {userData.atuacao?.length > 0 && (
+                    <div>
+                      <h3 className="font-medium text-gray-800 mb-2">Áreas de Atuação</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {userData.atuacao.map((area, index) => (
+                          <span key={index} className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm">
+                            {area}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Atendimento */}
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Calendar className="h-6 w-6 text-blue-600" />
+                  <h2 className="text-xl font-semibold text-gray-800">Formas de Atendimento</h2>
+                </div>
+
+                <div className="space-y-3">
+                  {userData.atendimentoonline && (
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                      <span>Atendimento Online</span>
+                    </div>
+                  )}
+                  {userData.atendimentopresencial && (
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-blue-500" />
+                      <span>Atendimento Presencial</span>
+                    </div>
+                  )}
+                  {userData.atendimentoemergencia && (
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-red-500" />
+                      <span>Atendimento de Emergência</span>
+                    </div>
+                  )}
+
+                  {/* Convênios */}
+                  {userData.planos?.length > 0 && (
+                    <div className="mt-4">
+                      <h3 className="font-medium text-gray-800 mb-2">Convênios</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {userData.planos.map((plano, index) => (
+                          <span key={index} className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm">
+                            {plano}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Faixa Etária */}
+                  {userData.faixa_etaria?.length > 0 && (
+                    <div className="mt-4">
+                      <h3 className="font-medium text-gray-800 mb-2">Faixa Etária</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {userData.faixa_etaria.map((faixa, index) => (
+                          <span key={index} className="px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-sm">
+                            {faixa}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Contato e Localização */}
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <MapPin className="h-6 w-6 text-blue-600" />
+                  <h2 className="text-xl font-semibold text-gray-800">Contato e Localização</h2>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Contato */}
+                  <div>
+                    <h3 className="font-medium text-gray-800 mb-2">Contato</h3>
+                    <div className="space-y-2">
+                      {userData.telefone && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Phone className="h-5 w-5 text-gray-400" />
+                          <span>{userData.telefone}</span>
+                        </div>
+                      )}
+                      {userData.email && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Mail className="h-5 w-5 text-gray-400" />
+                          <span>{userData.email}</span>
+                        </div>
+                      )}
+                      {userData.instagram && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <span className="text-gray-400">@</span>
+                          <span>{userData.instagram}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {calculateProfileCompleteness(userData)}% completo
-                  </p>
+
+                  {/* Localização */}
+                  <div>
+                    <h3 className="font-medium text-gray-800 mb-2">Localização</h3>
+                    <div className="space-y-2">
+                      {userData.bairro && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <MapPin className="h-5 w-5 text-gray-400" />
+                          <span>{userData.bairro}</span>
+                        </div>
+                      )}
+                      {(userData.cidade || userData.estado) && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Building className="h-5 w-5 text-gray-400" />
+                          <span>
+                            {userData.cidade}
+                            {userData.estado && `, ${userData.estado}`}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
