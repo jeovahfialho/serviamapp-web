@@ -814,7 +814,7 @@ const faixasEtariasDisponiveis = [
                         <div className="mt-2 flex items-center justify-between bg-gray-100 p-3 rounded-lg">
                           {prof.telefone && (
                             <a 
-                              href={`https://wa.me/${prof.telefone}?text=Olá, cheguei até você por meio da Plataforma Serviam.`} 
+                              href={`https://wa.me/55${prof.telefone}?text=Olá, cheguei até você por meio da Plataforma Serviam.`} 
                               target="_blank" 
                               rel="noopener noreferrer" 
                               className="flex items-center gap-2 text-green-600"
