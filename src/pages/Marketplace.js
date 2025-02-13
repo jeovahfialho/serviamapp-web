@@ -218,17 +218,44 @@ const faixasEtariasDisponiveis = [
   useEffect(() => {
     const fetchProfissionais = async () => {
       try {
+        // Busca os profissionais
         const response = await fetch('https://serviamapp-server.vercel.app/api/profissionais');
         const data = await response.json();
-        setProfissionais(data);
-        setProfissionaisFiltrados(data);
+
+        // Busca as reviews de cada profissional e combina os dados
+        const profissionaisComReviews = await Promise.all(data.map(async (prof) => {
+          const reviewsResponse = await fetch(`https://serviamapp-server.vercel.app/api/reviews?profId=${prof.id}&status=approved`);
+          const reviews = await reviewsResponse.json();
+          return {
+            ...prof,
+            reviews: reviews
+          };
+        }));
+
+        // Ordena os profissionais por número de reviews e pontuação
+        const profissionaisOrdenados = profissionaisComReviews.sort((a, b) => {
+          const reviewsA = a.reviews?.length || 0;
+          const reviewsB = b.reviews?.length || 0;
+
+          if (reviewsB !== reviewsA) {
+            return reviewsB - reviewsA;
+          }
+
+          const pontuacaoA = a.pontuacao || 0;
+          const pontuacaoB = b.pontuacao || 0;
+          return pontuacaoB - pontuacaoA;
+        });
+
+        // Atualiza os estados com os dados ordenados
+        setProfissionais(profissionaisOrdenados);
+        setProfissionaisFiltrados(profissionaisOrdenados);
         
-        // Preencher arrays de opções únicas
+        // Preencher arrays de opções únicas (mantém igual)
         setTodasCategorias(Array.from(new Set(data.map(p => p.tipo))));
         setTodasAtuacoes(Array.from(new Set(data.flatMap(p => p.atuacao))));
         setTodosConvenios(Array.from(new Set(data.flatMap(p => p.planos))));
         
-        // Preencher estados e cidades únicos
+        // Preencher estados e cidades únicos (mantém igual)
         setEstados(Array.from(new Set(data.map(p => p.estado).filter(Boolean))));
         setCidades(Array.from(new Set(data.map(p => p.cidade).filter(Boolean))));
 
@@ -613,17 +640,19 @@ const faixasEtariasDisponiveis = [
                   <div className="p-6">
                     {/* Keep the header section as is */}
                     <div className="flex space-x-4 h-36"> {/* Altura fixa definida */}
-                      {prof.foto ? (
-                        <img
-                          src={prof.foto}
-                          alt={prof.nome}
-                          className="h-20 w-20 rounded-full object-cover border-2 border-gray-100 flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0">
-                          <User className="h-8 w-8 text-blue-600" />
-                        </div>
-                      )}
+                      <a href={`/profissional/${prof.id}`} className="block">
+                        {prof.foto ? (
+                          <img
+                            src={prof.foto}
+                            alt={prof.nome}
+                            className="h-20 w-20 rounded-full object-cover border-2 border-gray-100 flex-shrink-0 hover:opacity-90 transition-opacity"
+                          />
+                        ) : (
+                          <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0 hover:opacity-90 transition-opacity">
+                            <User className="h-8 w-8 text-blue-600" />
+                          </div>
+                        )}
+                      </a>
                       <div className="flex-1 min-w-0"> {/* min-w-0 permite que o texto quebre corretamente */}
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-blue-600 text-sm font-medium truncate">
