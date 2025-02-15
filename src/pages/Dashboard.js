@@ -722,7 +722,7 @@ const Dashboard = () => {
           />
         )}
 
-{!isProfileIncomplete && (
+      {!isProfileIncomplete && (
           <>
             {/* Hero Section */}
             <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:p-8 mt-6">
@@ -857,7 +857,7 @@ const Dashboard = () => {
                   {/* Especializações */}
                   {userData.especializacao?.length > 0 && (
                     <div>
-                      <h3 className="font-medium text-gray-800 mb-2">Especialidadesm</h3>
+                      <h3 className="font-medium text-gray-800 mb-2">Especialidades</h3>
                       <div className="flex flex-wrap gap-2">
                         {userData.especializacao.map((esp, index) => (
                           <span key={index} className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-sm">

@@ -4,7 +4,8 @@ import {
   Percent, Brain, Map
 } from 'lucide-react';
 import { MdVerified } from 'react-icons/md';
-import CompactSmartSearch from './CompactSmartSearch';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import ProfissionaisPorCategoria from './ProfissionaisPorCategoria';
 import BrazilMap from './BrazilMap';
 import _ from 'lodash';
 
@@ -25,7 +26,7 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
 
     const totalConsultas = profissionais.reduce((sum, prof) => sum + (prof.referencias || 0), 0);
     const profissionaisVerificados = profissionais.filter(prof => prof.verificado).length;
-    const especialidadesUnicas = new Set(profissionais.flatMap(prof => prof.atuacao || [])).size;
+    const especialidadesUnicas = new Set(profissionais.flatMap(prof => prof.especializacao || [])).size;
 
     return {
       totalConsultas,
@@ -71,76 +72,76 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
     <div className="space-y-6">
 
       {/* Profissionais Verificados */}
-<div className="bg-white rounded-2xl shadow-md p-6">
-  <h3 className="font-semibold text-xl mb-6 flex items-center text-gray-800">
-    <MdVerified className="h-6 w-6 text-blue-500 mr-2" />
-    Profissionais Verificados
-  </h3>
-  <div className="space-y-6">
-    {profissionaisFiltrados
-      .filter(prof => prof.verificado === true)
-      .slice(0, 3)
-      .map(prof => (
-        <a 
-          key={prof.id}
-          href={`/profissional/${prof.id}`}
-          className="block p-4 hover:bg-gray-50 rounded-lg transition-all duration-300 cursor-pointer"
-        >
-          <div className="flex items-center mb-2">
-            {prof.foto ? (
-              <img src={prof.foto} alt={prof.nome} className="h-12 w-12 rounded-full object-cover mr-4" />
-            ) : (
-              <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mr-4">
-                <Users className="h-6 w-6 text-gray-400" />
-              </div>
-            )}
-            <div>
-              {/* Tipo (Especialidade) */}
-              <p className="text-sm font-medium text-gray-600">{prof.tipo}</p>
-              
-              {/* Nome */}
-              <h4 className="font-semibold text-lg text-gray-800 flex items-center">
-                {prof.nome}
-                <MdVerified className="h-4 w-4 text-blue-500 ml-1" />
-              </h4>
-            </div>
-          </div>
-          
-          {/* Especializações */}
-          <p className="text-base text-gray-700 mb-3">
-            {prof.especializacao?.slice(0, 2).join(', ')}
-            {prof.especializacao?.length > 2 && ', ...'}
-          </p>
-          
-          {/* Áreas de Atuação */}
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Áreas de Atuação:</p>
-            <div className="flex flex-wrap gap-2">
-              {prof.atuacao?.slice(0, 4).map((area, index) => (
-                <span 
-                  key={index}
-                  className="px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded-full"
-                >
-                  {area}
-                </span>
-              ))}
-              {prof.atuacao?.length > 4 && (
-                <span className="text-sm text-blue-600 font-medium">
-                  +{prof.atuacao.length - 4}
-                </span>
-              )}
-            </div>
-          </div>
-        </a>
-      ))}
-  </div>
-</div>
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <h3 className="font-semibold text-xl mb-6 flex items-center text-gray-800">
+          <MdVerified className="h-6 w-6 text-blue-500 mr-2" />
+          Profissionais Verificados
+        </h3>
+        <div className="space-y-6">
+          {profissionaisFiltrados
+            .filter(prof => prof.verificado === true)
+            .slice(0, 3)
+            .map(prof => (
+              <a 
+                key={prof.id}
+                href={`/profissional/${prof.id}`}
+                className="block p-4 hover:bg-gray-50 rounded-lg transition-all duration-300 cursor-pointer"
+              >
+                <div className="flex items-center mb-2">
+                  {prof.foto ? (
+                    <img src={prof.foto} alt={prof.nome} className="h-12 w-12 rounded-full object-cover mr-4" />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mr-4">
+                      <Users className="h-6 w-6 text-gray-400" />
+                    </div>
+                  )}
+                  <div>
+                    {/* Tipo (Especialidade) */}
+                    <p className="text-sm font-medium text-gray-600">{prof.tipo}</p>
+                    
+                    {/* Nome */}
+                    <h4 className="font-semibold text-lg text-gray-800 flex items-center">
+                      {prof.nome}
+                      <MdVerified className="h-4 w-4 text-blue-500 ml-1" />
+                    </h4>
+                  </div>
+                </div>
+                
+                {/* Especializações */}
+                <p className="text-base text-gray-700 mb-3">
+                  {prof.especializacao?.slice(0, 2).join(', ')}
+                  {prof.especializacao?.length > 2 && ', ...'}
+                </p>
+                
+                {/* Áreas de Atuação */}
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Áreas de Atuação:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {prof.atuacao?.slice(0, 4).map((area, index) => (
+                      <span 
+                        key={index}
+                        className="px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded-full"
+                      >
+                        {area}
+                      </span>
+                    ))}
+                    {prof.atuacao?.length > 4 && (
+                      <span className="text-sm text-blue-600 font-medium">
+                        +{prof.atuacao.length - 4}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </a>
+            ))}
+        </div>
+      </div>
       
       {/* Profissionais Destaque */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h3 className="font-semibold text-lg mb-4 flex items-center">
           <Award className="h-5 w-5 text-yellow-500 mr-2" />
-          Profissionais Destaque
+          Melhores Avaliados
         </h3>
         <div className="space-y-4">
           {profissionaisFiltrados
@@ -172,13 +173,19 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
         </div>
       </div>
 
-      {/* Card de Conquistas da Plataforma */}
+
+      <ProfissionaisPorCategoria 
+        profissionais={profissionais}
+        setProfissionaisFiltrados={setProfissionaisFiltrados}
+      />
+      
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h3 className="font-semibold text-lg mb-4 flex items-center">
           <Trophy className="h-5 w-5 text-yellow-500 mr-2" />
           Conquistas da Plataforma
         </h3>
         <div className="grid grid-cols-2 gap-4">
+          {/* Profissionais */}
           <div className="bg-yellow-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
               <Users className="h-8 w-8 text-yellow-500" />
@@ -187,10 +194,11 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
               {profissionais.filter(prof => prof.status === 'approved').length}
             </div>
             <div className="text-sm text-yellow-600">
-              Profissionais Cadastrados
+              Profissionais Ativos
             </div>
           </div>
 
+          {/* Avaliações */}
           <div className="bg-green-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
               <Star className="h-8 w-8 text-green-500" />
@@ -203,6 +211,7 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
             </div>
           </div>
 
+          {/* Profissionais Verificados */}
           <div className="bg-blue-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
               <MdVerified className="h-8 w-8 text-blue-500" />
@@ -215,6 +224,7 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
             </div>
           </div>
 
+          {/* Especialidades */}
           <div className="bg-orange-50 rounded-xl p-4 text-center">
             <div className="flex justify-center mb-2">
               <Award className="h-8 w-8 text-orange-500" />
@@ -226,8 +236,34 @@ const SideComponents = ({ profissionais = [], profissionaisFiltrados = [], setPr
               Especialidades
             </div>
           </div>
+
+          {/* Total Avaliações */}
+          <div className="bg-purple-50 rounded-xl p-4 text-center">
+            <div className="flex justify-center mb-2">
+              <Star className="h-8 w-8 text-purple-500" />
+            </div>
+            <div className="text-2xl font-bold text-purple-700">
+              {profissionais.reduce((acc, p) => acc + (p.referencias || 0), 0)}
+            </div>
+            <div className="text-sm text-purple-600">
+              Total de Avaliações
+            </div>
+          </div>
+
+          {/* Estados Atendidos */}
+          <div className="bg-indigo-50 rounded-xl p-4 text-center">
+            <div className="flex justify-center mb-2">
+              <Map className="h-8 w-8 text-indigo-500" />
+            </div>
+            <div className="text-2xl font-bold text-indigo-700">
+              {new Set(profissionais.map(p => p.estado).filter(Boolean)).size}
+            </div>
+            <div className="text-sm text-indigo-600">
+              Estados Atendidos
+            </div>
+          </div>
         </div>
-      </div>
+      </div>      {/* Card de Profissionais Avaliados */}
 
       {/* Mapa de Profissionais */}
       <div className="bg-white rounded-2xl shadow-md p-6">

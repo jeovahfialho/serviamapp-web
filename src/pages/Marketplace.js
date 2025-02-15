@@ -78,6 +78,7 @@ const faixasEtariasDisponiveis = [
 
   // Create a reusable section component
   const CollapsibleSection = ({ prof, sectionKey, icon: Icon, title, children }) => {
+
     const isExpanded = expandedSections[prof.id]?.[sectionKey];
     
     return (
@@ -634,7 +635,7 @@ const faixasEtariasDisponiveis = [
                 <div key={prof.id} className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow">
                   {prof.pontuacao >= 4.8 && (
                     <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-xs font-bold px-3 py-1 rounded-tl-2xl rounded-br-2xl absolute">
-                      TOP PROFISSIONAL
+                      MELHORES AVALIADOS
                     </div>
                   )}
                   <div className="p-6">
