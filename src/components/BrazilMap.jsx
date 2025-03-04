@@ -43,7 +43,12 @@ const getStateCenter = (stateAbbr) => {
   return centers[stateAbbr] || { x: 0, y: 0 };
 };
 
-const BrazilMap = ({ estados = [] }) => {
+const BrazilMap = ({ 
+  estados = [], 
+  onStateClick, // Optional click handler
+  pinColor = 'fill-indigo-500/50', // Customizable pin color
+  showPins = true // Option to toggle pin display
+}) => {
   return (
     <svg
       // Você pode usar viewBox para responsividade
@@ -255,15 +260,17 @@ const BrazilMap = ({ estados = [] }) => {
         Opcional: se quiser renderizar um "pin" para cada estado presente em `estados`,
         faça um map aqui. Ou remova se não quiser esses círculos adicionais.
       */}
-      {estados.map((estado) => {
+      {showPins && estados.map((estado) => {
         const { x, y } = getStateCenter(estado);
         return (
           <circle
             key={estado}
-            className="fill-indigo-500/50"
-            r="12"
+            className={pinColor}
+            r="8" // Slightly smaller
             cx={x}
             cy={y}
+            onClick={() => onStateClick?.(estado)} // Optional click handler
+            style={{ cursor: onStateClick ? 'pointer' : 'default' }}
           />
         );
       })}

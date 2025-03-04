@@ -78,6 +78,7 @@ const faixasEtariasDisponiveis = [
 
   // Create a reusable section component
   const CollapsibleSection = ({ prof, sectionKey, icon: Icon, title, children }) => {
+
     const isExpanded = expandedSections[prof.id]?.[sectionKey];
     
     return (
@@ -634,7 +635,7 @@ const faixasEtariasDisponiveis = [
                 <div key={prof.id} className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow">
                   {prof.pontuacao >= 4.8 && (
                     <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-xs font-bold px-3 py-1 rounded-tl-2xl rounded-br-2xl absolute">
-                      TOP PROFISSIONAL
+                      MELHORES AVALIADOS
                     </div>
                   )}
                   <div className="p-6">
@@ -697,10 +698,14 @@ const faixasEtariasDisponiveis = [
                     >
                       <div className="space-y-1">
                         {prof.graduacao?.map((grad, index) => (
-                          <p key={index} className="text-sm text-gray-600">{grad}</p>
+                          <li key={index} className="text-sm text-gray-600">
+                          {grad}
+                          </li>
                         ))}
                         {prof.pos_graduacao?.map((pos, index) => (
-                          <p key={index} className="text-sm text-gray-600">{pos}</p>
+                          <li key={index} className="text-sm text-gray-600">
+                          {pos}
+                          </li>
                         ))}
                       </div>
                     </CollapsibleSection>
@@ -804,6 +809,18 @@ const faixasEtariasDisponiveis = [
                         )}
                       </div>
                     </CollapsibleSection>
+
+                    {/* Attendance type section */}
+                    {/* Attendance type section */}
+                    <div className="mt-1 px-1 py-2">
+                      <div className="flex items-center text-sm text-gray-600">
+                        {prof.atendimentoonline && prof.atendimentopresencial && prof.cidade && prof.estado ? (
+                          <span>Atendimento <span className="font-medium">on-line</span> e <span className="font-medium">presencial</span> em {prof.cidade}-{prof.estado}</span>
+                        ) : prof.atendimentoonline ? (
+                          <span>Atendimento <span className="font-medium">on-line</span></span>
+                        ) : null}
+                      </div>
+                    </div>
 
                     {/* Keep the footer section as is */}
                     <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">

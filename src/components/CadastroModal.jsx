@@ -70,7 +70,6 @@ const CadastroModal = ({ onClose, initialData  }) => {
       if (!formData.telefone || formData.telefone.trim() === '') {
         errors.telefone = 'Telefone é obrigatório';
       }
-      
 
       if (!formData.sexo || formData.sexo.trim() === '') {
         errors.sexo = 'Sexo é obrigatório';
@@ -78,6 +77,11 @@ const CadastroModal = ({ onClose, initialData  }) => {
 
       if (!formData.foto) {
         errors.foto = 'Foto do profissional é obrigatória';
+      }
+
+      // Validate atuação
+      if (!formData.especializacao || formData.especializacao.every(a => a.trim() === '')) {
+        errors.especializacao = 'Pelo menos uma Especialidade é obrigatória';
       }
 
       return errors;
