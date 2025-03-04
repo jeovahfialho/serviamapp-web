@@ -152,11 +152,11 @@ const CompactSmartSearch = ({
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Encontre os Melhores Profissionais <Sparkles className="inline-block text-blue-600 ml-2" size={36} />
+            Encontre o profissional de saúde ideal para você <Sparkles className="inline-block text-blue-600 ml-2" size={36} />
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Revolucionando a busca por profissionais de saúde com inteligência artificial. 
-            Conectamos você aos especialistas perfeitos para suas necessidades únicas.
+            Nossa plataforma reúne os melhores especialistas em saúde. <br/>
+            Compartilhe sua necessidade e deixe nossa IA fazer o match perfeito.
           </p>
         </div>
 
@@ -167,7 +167,7 @@ const CompactSmartSearch = ({
                 <textarea
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="Descreva livremente o que procura. Exemplo: 'Preciso de ajuda para ansiedade e problemas de relacionamento'"
+                  placeholder="Descreva com suas palavras o que você procura."
                   className="w-full p-4 pr-10 text-gray-700 focus:outline-none text-base resize-none h-20 
                     placeholder-gray-400"
                 />
@@ -216,7 +216,7 @@ const CompactSmartSearch = ({
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                {searchResults.slice(0, 3).map((prof) => {
+                {searchResults.slice(0, 6).map((prof) => {
 
                   return (
                     <a
